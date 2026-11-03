@@ -18,6 +18,8 @@
   { "id": "chap-kb-reform-2", "subject": "kb-reform", "name": "นโยบายและจุดเน้นของกระทรวงศึกษาธิการล่าสุด", "pages": 18 },
   { "id": "chap-kb-general-1", "subject": "kb-general", "name": "เหตุการณ์ปัจจุบัน เศรษฐกิจ สังคม การเมือง", "pages": 20 },
   { "id": "chap-kb-general-2", "subject": "kb-general", "name": "เทคโนโลยีดิจิทัลเพื่อการศึกษา และ AI", "pages": 16 },
-  { "id": "chap-kb-major-1", "subject": "kb-major", "name": "แนวคิดและหลักการเฉพาะทางวิชาเอก (พื้นฐาน)", "pages": 45 },
-  { "id": "chap-kb-major-2", "subject": "kb-major", "name": "การจัดการเรียนรู้บูรณาการตามสาระวิชาเอก", "pages": 38 }
+  { "id": "chap-kb-major-physics", "subject": "kb-major", "name": "⚡ ฟิสิกส์ (Physics)", "pages": 35 },
+  { "id": "chap-kb-major-chemistry", "subject": "kb-major", "name": "🧪 เคมี (Chemistry)", "pages": 35 },
+  { "id": "chap-kb-major-biology", "subject": "kb-major", "name": "🧬 ชีววิทยา (Biology)", "pages": 35 },
+  { "id": "chap-kb-major-earth", "subject": "kb-major", "name": "🪐 โลก ดาราศาสตร์ และอวกาศ", "pages": 30 }
 ]

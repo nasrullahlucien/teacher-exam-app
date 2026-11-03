@@ -7,7 +7,7 @@ import { fetchSubjects, fetchQuestionsBySubject } from '../services/dataLoader'
 import type { NavTab } from './BottomNav'
 
 interface DashboardProps {
-  onNavigate: (tab: NavTab, subjectId?: string) => void
+  onNavigate: (tab: NavTab, subjectId?: string, topic?: string) => void
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
@@ -172,6 +172,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     subject={subj}
                     stats={stats}
                     onPractice={() => onNavigate('practice', subj.id)}
+                    onPracticeTopic={(topic) => onNavigate('practice', subj.id, topic)}
                   />
                 )
               })}
@@ -201,6 +202,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                     subject={subj}
                     stats={stats}
                     onPractice={() => onNavigate('practice', subj.id)}
+                    onPracticeTopic={(topic) => onNavigate('practice', subj.id, topic)}
                   />
                 )
               })}
@@ -221,9 +223,18 @@ interface SubjectCardProps {
     subjectMistakes: number
   }
   onPractice: () => void
+  onPracticeTopic?: (topic: string) => void
 }
 
-const SubjectCard: React.FC<SubjectCardProps> = ({ subject, stats, onPractice }) => {
+const SubjectCard: React.FC<SubjectCardProps> = ({ subject, stats, onPractice, onPracticeTopic }) => {
+  const isMajor = subject.id === 'kb-major'
+  const majorCategories = [
+    { id: '⚡ ฟิสิกส์', label: '⚡ ฟิสิกส์' },
+    { id: '🧪 เคมี', label: '🧪 เคมี' },
+    { id: '🧬 ชีววิทยา', label: '🧬 ชีววิทยา' },
+    { id: '🪐 โลก ดาราศาสตร์ และอวกาศ', label: '🪐 โลก/ดาราศาสตร์' }
+  ]
+
   return (
     <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -242,6 +253,26 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, stats, onPractice })
           <span>ฝึกวิชานี้</span>
         </button>
       </div>
+
+      {/* 4 Science Major Subcategories */}
+      {isMajor && (
+        <div className="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+          <span className="text-[10px] font-semibold text-slate-500">เลือกฝึกเฉพาะ 4 หมวดวิชาเอก:</span>
+          <div className="grid grid-cols-2 gap-1.5">
+            {majorCategories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => onPracticeTopic && onPracticeTopic(cat.id)}
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 border border-slate-200/80 text-[11px] font-semibold text-slate-700 hover:text-blue-700 active:scale-95 transition-all"
+              >
+                <span>{cat.label}</span>
+                <span className="text-[10px] text-blue-500 font-normal">ฝึก &rarr;</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Progress & Score Bar */}
       <div className="flex flex-col gap-1.5">

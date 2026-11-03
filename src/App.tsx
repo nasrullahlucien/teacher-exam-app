@@ -12,6 +12,7 @@ import { db } from './db'
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard')
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null)
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
   const [isBackupOpen, setIsBackupOpen] = useState(false)
 
   // Live count of pending mistakes for the bottom navigation badge
@@ -19,9 +20,14 @@ export function App() {
     return await db.mistakes.count()
   }, []) ?? 0
 
-  const handleNavigate = (tab: NavTab, subjectId?: string) => {
+  const handleNavigate = (tab: NavTab, subjectId?: string, topic?: string) => {
     if (subjectId) {
       setSelectedSubjectId(subjectId)
+    }
+    if (topic) {
+      setSelectedTopic(topic)
+    } else {
+      setSelectedTopic(null)
     }
     setCurrentTab(tab)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -38,7 +44,11 @@ export function App() {
         {currentTab === 'practice' && (
           <PracticeView
             initialSubjectId={selectedSubjectId}
-            onClearInitialSubject={() => setSelectedSubjectId(null)}
+            initialTopic={selectedTopic}
+            onClearInitialSubject={() => {
+              setSelectedSubjectId(null)
+              setSelectedTopic(null)
+            }}
           />
         )}
         {currentTab === 'mistakes' && <MistakesView />}

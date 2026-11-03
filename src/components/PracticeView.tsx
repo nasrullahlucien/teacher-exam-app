@@ -6,11 +6,13 @@ import { PracticeSession } from './PracticeSession'
 
 interface PracticeViewProps {
   initialSubjectId?: string | null
+  initialTopic?: string | null
   onClearInitialSubject?: () => void
 }
 
 export const PracticeView: React.FC<PracticeViewProps> = ({
   initialSubjectId,
+  initialTopic,
   onClearInitialSubject
 }) => {
   const [subjects, setSubjects] = useState<Subject[]>([])
@@ -30,11 +32,14 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       setSubjects(res)
       if (initialSubjectId) {
         setSelectedSubjectId(initialSubjectId)
+        if (initialTopic) {
+          setSelectedTopic(initialTopic)
+        }
         if (onClearInitialSubject) onClearInitialSubject()
       }
       setIsLoading(false)
     })
-  }, [initialSubjectId, onClearInitialSubject])
+  }, [initialSubjectId, initialTopic, onClearInitialSubject])
 
   // Update topics when selected subject changes
   useEffect(() => {
@@ -153,25 +158,70 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         </div>
 
         {/* Topic Selector (if specific subject selected) */}
-        {selectedSubjectId !== 'all' && topics.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-blue-600" />
-              <span>หัวข้อย่อย</span>
-            </label>
-            <select
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
-              className="w-full text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">ทุกหัวข้อย่อย</option>
-              {topics.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+        {selectedSubjectId !== 'all' && (
+          selectedSubjectId === 'kb-major' ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-blue-600" />
+                  <span>เลือกหมวดวิชาเอก (4 หมวด)</span>
+                </label>
+                {selectedTopic !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTopic('all')}
+                    className="text-[11px] text-blue-600 font-medium hover:underline"
+                  >
+                    รวมทุกหมวด
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: '⚡ ฟิสิกส์', label: '⚡ ฟิสิกส์' },
+                  { id: '🧪 เคมี', label: '🧪 เคมี' },
+                  { id: '🧬 ชีววิทยา', label: '🧬 ชีววิทยา' },
+                  { id: '🪐 โลก ดาราศาสตร์ และอวกาศ', label: '🪐 โลก ดาราศาสตร์' },
+                ].map((cat) => {
+                  const isSelected = selectedTopic === cat.id
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedTopic(isSelected ? 'all' : cat.id)}
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-left flex items-center justify-between active:scale-[0.98] ${
+                        isSelected
+                          ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-500'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                      {isSelected && <span className="text-xs text-blue-600 font-bold">&#10003;</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ) : topics.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-blue-600" />
+                <span>หัวข้อย่อย</span>
+              </label>
+              <select
+                value={selectedTopic}
+                onChange={(e) => setSelectedTopic(e.target.value)}
+                className="w-full text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">ทุกหัวข้อย่อย</option>
+                {topics.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )
         )}
 
         {/* Question Count Buttons */}
