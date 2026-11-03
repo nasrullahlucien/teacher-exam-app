@@ -1,0 +1,10 @@
+[
+  { "id": "ka-analysis", "part": "ก", "name": "การคิดวิเคราะห์" },
+  { "id": "ka-english", "part": "ก", "name": "ภาษาอังกฤษ" },
+  { "id": "ka-civil", "part": "ก", "name": "ข้าราชการที่ดี" },
+  { "id": "kb-teaching", "part": "ข", "name": "การจัดการเรียนการสอน" },
+  { "id": "kb-law", "part": "ข", "name": "กฎหมายการศึกษา" },
+  { "id": "kb-reform", "part": "ข", "name": "แนวการปฏิรูปการศึกษา" },
+  { "id": "kb-general", "part": "ข", "name": "ความรอบรู้ทั่วไป" },
+  { "id": "kb-major", "part": "ข", "name": "วิชาเอก (วิทยาศาสตร์/ทั่วไป)" }
+]

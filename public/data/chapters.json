@@ -1,0 +1,23 @@
+[
+  { "id": "chap-ka-analysis-1", "subject": "ka-analysis", "name": "คณิตศาสตร์ทั่วไปและอนุกรม", "pages": 24 },
+  { "id": "chap-ka-analysis-2", "subject": "ka-analysis", "name": "การสรุปเหตุผลเชิงตรรกะ", "pages": 18 },
+  { "id": "chap-ka-analysis-3", "subject": "ka-analysis", "name": "การวิเคราะห์และทำความเข้าใจบทความภาษาไทย", "pages": 22 },
+  { "id": "chap-ka-english-1", "subject": "ka-english", "name": "ไวยากรณ์พื้นฐานและโครงสร้างประโยค (Grammar)", "pages": 30 },
+  { "id": "chap-ka-english-2", "subject": "ka-english", "name": "คำศัพท์และสำนวนที่พบบ่อย (Vocabulary & Idioms)", "pages": 20 },
+  { "id": "chap-ka-english-3", "subject": "ka-english", "name": "การอ่านจับใจความภาษาอังกฤษ (Reading Comprehension)", "pages": 25 },
+  { "id": "chap-ka-civil-1", "subject": "ka-civil", "name": "พ.ร.บ. ระเบียบข้าราชการพลเรือน และจรรยาบรรณ", "pages": 28 },
+  { "id": "chap-ka-civil-2", "subject": "ka-civil", "name": "พระราชกฤษฎีกาว่าด้วยหลักเกณฑ์และวิธีการบริหารกิจการบ้านเมืองที่ดี", "pages": 26 },
+  { "id": "chap-ka-civil-3", "subject": "ka-civil", "name": "พ.ร.บ. วิธีปฏิบัติราชการทางปกครอง และความรับผิดทางละเมิด", "pages": 32 },
+  { "id": "chap-kb-teaching-1", "subject": "kb-teaching", "name": "หลักสูตรและการพัฒนาหลักสูตรแกนกลาง", "pages": 35 },
+  { "id": "chap-kb-teaching-2", "subject": "kb-teaching", "name": "จิตวิทยาการศึกษาและการแนะแนวผู้เรียน", "pages": 28 },
+  { "id": "chap-kb-teaching-3", "subject": "kb-teaching", "name": "การวัดและประเมินผลการเรียนรู้", "pages": 30 },
+  { "id": "chap-kb-law-1", "subject": "kb-law", "name": "พ.ร.บ. การศึกษาแห่งชาติ พ.ศ. 2542 และที่แก้ไขเพิ่มเติม", "pages": 40 },
+  { "id": "chap-kb-law-2", "subject": "kb-law", "name": "พ.ร.บ. ระเบียบข้าราชการครูและบุคลากรทางการศึกษา", "pages": 36 },
+  { "id": "chap-kb-law-3", "subject": "kb-law", "name": "พ.ร.บ. สภาครูและผู้ประกอบวิชาชีพทางการศึกษา", "pages": 25 },
+  { "id": "chap-kb-reform-1", "subject": "kb-reform", "name": "ยุทธศาสตร์ชาติ 20 ปี และแผนปฏิรูปประเทศด้านการศึกษา", "pages": 32 },
+  { "id": "chap-kb-reform-2", "subject": "kb-reform", "name": "นโยบายและจุดเน้นของกระทรวงศึกษาธิการล่าสุด", "pages": 18 },
+  { "id": "chap-kb-general-1", "subject": "kb-general", "name": "เหตุการณ์ปัจจุบัน เศรษฐกิจ สังคม การเมือง", "pages": 20 },
+  { "id": "chap-kb-general-2", "subject": "kb-general", "name": "เทคโนโลยีดิจิทัลเพื่อการศึกษา และ AI", "pages": 16 },
+  { "id": "chap-kb-major-1", "subject": "kb-major", "name": "แนวคิดและหลักการเฉพาะทางวิชาเอก (พื้นฐาน)", "pages": 45 },
+  { "id": "chap-kb-major-2", "subject": "kb-major", "name": "การจัดการเรียนรู้บูรณาการตามสาระวิชาเอก", "pages": 38 }
+]
