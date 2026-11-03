@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import {
   Play,
-  Sparkles,
   Shuffle,
   Atom,
   FlaskConical,
   Dna,
   Orbit,
-  Check
+  ArrowLeft,
+  ChevronRight
 } from 'lucide-react'
 import type { Subject, Question } from '../types'
 import { fetchSubjects, fetchQuestionsBySubject, fetchAllQuestions } from '../services/dataLoader'
@@ -19,14 +19,16 @@ interface PracticeViewProps {
   onClearInitialSubject?: () => void
 }
 
+type Step = 'select_subject' | 'select_major' | 'configure'
+
 export const PracticeView: React.FC<PracticeViewProps> = ({
   initialSubjectId,
   initialTopic,
   onClearInitialSubject
 }) => {
   const [subjects, setSubjects] = useState<Subject[]>([])
+  const [currentStep, setCurrentStep] = useState<Step>('select_subject')
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('all')
-  const [topics, setTopics] = useState<string[]>([])
   const [selectedTopic, setSelectedTopic] = useState<string>('all')
   const [questionCount, setQuestionCount] = useState<number>(10)
   const [isShuffle, setIsShuffle] = useState<boolean>(true)
@@ -42,35 +44,26 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       setSubjects(res)
       if (initialSubjectId) {
         setSelectedSubjectId(initialSubjectId)
-        const found = res.find((s) => s.id === initialSubjectId)
-        if (found) {
-          setSubjectFilterTab(found.part)
-        }
-        if (initialTopic) {
-          setSelectedTopic(initialTopic)
+        if (initialSubjectId === 'kb-major') {
+          if (initialTopic) {
+            setSelectedTopic(initialTopic)
+            setCurrentStep('configure')
+          } else {
+            setCurrentStep('select_major')
+          }
+        } else {
+          if (initialTopic) {
+            setSelectedTopic(initialTopic)
+          } else {
+            setSelectedTopic('all')
+          }
+          setCurrentStep('configure')
         }
         if (onClearInitialSubject) onClearInitialSubject()
       }
       setIsLoading(false)
     })
   }, [initialSubjectId, initialTopic, onClearInitialSubject])
-
-  // Update topics when selected subject changes
-  useEffect(() => {
-    if (selectedSubjectId === 'all') {
-      setTopics([])
-      setSelectedTopic('all')
-      return
-    }
-
-    fetchQuestionsBySubject(selectedSubjectId).then((questions) => {
-      const uniqueTopics = Array.from(new Set(questions.map((q) => q.topic)))
-      setTopics(uniqueTopics)
-      if (selectedSubjectId !== 'kb-major') {
-        setSelectedTopic('all')
-      }
-    })
-  }, [selectedSubjectId])
 
   const handleStartPractice = async () => {
     setIsLoading(true)
@@ -125,32 +118,34 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       <PracticeSession
         title={activeSession.title}
         questions={activeSession.questions}
-        onFinish={() => setActiveSession(null)}
+        onFinish={() => {
+          setActiveSession(null)
+          setCurrentStep('select_subject')
+        }}
       />
     )
   }
 
   // Icons and visual badges for subjects
-  const subjectMeta: Record<string, { icon: string; color: string; desc: string }> = {
-    'ka-analysis': { icon: '🧮', color: 'from-blue-500/10 to-indigo-500/10 border-blue-200 text-blue-700', desc: 'คณิตศาสตร์ ตรรกะ บทความ' },
-    'ka-english': { icon: '🇬🇧', color: 'from-sky-500/10 to-blue-500/10 border-sky-200 text-sky-700', desc: 'Grammar Vocab Reading' },
-    'ka-civil': { icon: '🏛️', color: 'from-amber-500/10 to-yellow-500/10 border-amber-200 text-amber-700', desc: 'ระเบียบข้าราชการ จริยธรรม' },
-    'kb-teaching': { icon: '🧑‍🏫', color: 'from-emerald-500/10 to-teal-500/10 border-emerald-200 text-emerald-700', desc: 'หลักสูตร จิตวิทยา การประเมิน' },
-    'kb-law': { icon: '⚖️', color: 'from-indigo-500/10 to-purple-500/10 border-indigo-200 text-indigo-700', desc: 'พ.ร.บ.การศึกษา คุรุสภา' },
-    'kb-reform': { icon: '🚀', color: 'from-rose-500/10 to-pink-500/10 border-rose-200 text-rose-700', desc: 'ยุทธศาสตร์ชาติ จุดเน้น ศธ.' },
-    'kb-general': { icon: '🌐', color: 'from-teal-500/10 to-cyan-500/10 border-teal-200 text-teal-700', desc: 'เหตุการณ์ปัจจุบัน เศรษฐกิจ นโยบาย' },
-    'kb-major': { icon: '🔬', color: 'from-purple-500/10 to-pink-500/10 border-purple-200 text-purple-700', desc: 'ฟิสิกส์ เคมี ชีวะ โลกดาราศาสตร์' },
+  const subjectMeta: Record<string, { icon: string; desc: string }> = {
+    'ka-analysis': { icon: '🧮', desc: 'คณิตศาสตร์ ตรรกะ บทความ' },
+    'ka-english': { icon: '🇬🇧', desc: 'Grammar Vocab Reading' },
+    'ka-civil': { icon: '🏛️', desc: 'ระเบียบข้าราชการ จริยธรรม' },
+    'kb-teaching': { icon: '🧑‍🏫', desc: 'หลักสูตร จิตวิทยา การประเมิน' },
+    'kb-law': { icon: '⚖️', desc: 'พ.ร.บ.การศึกษา คุรุสภา' },
+    'kb-reform': { icon: '🚀', desc: 'ยุทธศาสตร์ชาติ จุดเน้น ศธ.' },
+    'kb-general': { icon: '🌐', desc: 'เหตุการณ์ปัจจุบัน เศรษฐกิจ' },
+    'kb-major': { icon: '🔬', desc: 'ฟิสิกส์ เคมี ชีวะ โลกดาราศาสตร์' },
   }
 
-  // 4 Major Science Disciplines with enhanced cards
+  // 4 Major Science Disciplines
   const majorDisciplines = [
     {
       id: '⚡ ฟิสิกส์',
       label: 'ฟิสิกส์',
       icon: Atom,
-      color: 'bg-blue-50/90 hover:bg-blue-100/90 border-blue-200 text-blue-900',
-      activeColor: 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 ring-2 ring-blue-400',
-      iconColor: 'text-blue-600',
+      color: 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-900',
+      iconBg: 'bg-blue-100 text-blue-600',
       sub: 'การเคลื่อนที่ แรง งาน พลังงาน ไฟฟ้า',
       badge: '⚡ Physics'
     },
@@ -158,19 +153,17 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       id: '🧪 เคมี',
       label: 'เคมี',
       icon: FlaskConical,
-      color: 'bg-emerald-50/90 hover:bg-emerald-100/90 border-emerald-200 text-emerald-900',
-      activeColor: 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/20 ring-2 ring-emerald-400',
-      iconColor: 'text-emerald-600',
-      sub: 'สสาร ตารางธาตุ พันธะ กรด-เบส',
+      color: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-900',
+      iconBg: 'bg-emerald-100 text-emerald-600',
+      sub: 'สสาร ตารางธาตุ พันธะเคมี กรด-เบส',
       badge: '🧪 Chemistry'
     },
     {
       id: '🧬 ชีววิทยา',
       label: 'ชีววิทยา',
       icon: Dna,
-      color: 'bg-purple-50/90 hover:bg-purple-100/90 border-purple-200 text-purple-900',
-      activeColor: 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/20 ring-2 ring-purple-400',
-      iconColor: 'text-purple-600',
+      color: 'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-900',
+      iconBg: 'bg-purple-100 text-purple-600',
       sub: 'เซลล์ ออร์แกเนลล์ พันธุศาสตร์ เมนเดล',
       badge: '🧬 Biology'
     },
@@ -178,9 +171,8 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       id: '🪐 โลก ดาราศาสตร์ และอวกาศ',
       label: 'โลก ดาราศาสตร์',
       icon: Orbit,
-      color: 'bg-amber-50/90 hover:bg-amber-100/90 border-amber-200 text-amber-900',
-      activeColor: 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-500/20 ring-2 ring-amber-400',
-      iconColor: 'text-amber-600',
+      color: 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900',
+      iconBg: 'bg-amber-100 text-amber-600',
       sub: 'ชั้นบรรยากาศ น้ำเกิดน้ำตาย อวกาศ',
       badge: '🪐 Earth & Space'
     }
@@ -192,65 +184,55 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
 
   const selectedSubjectObj = subjects.find((s) => s.id === selectedSubjectId)
 
-  return (
-    <div className="max-w-md mx-auto px-4 py-5 pb-28 flex flex-col gap-5 animate-fade-in">
-      {/* Title */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-          <h2 className="text-xl font-bold text-slate-800">ฝึกทำข้อสอบ</h2>
+  // -------------------------------------------------------------
+  // STEP 1: SELECT MAIN SUBJECT
+  // -------------------------------------------------------------
+  if (currentStep === 'select_subject') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-5 pb-28 flex flex-col gap-4 animate-fade-in">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+            <h2 className="text-xl font-bold text-slate-800">เลือกวิชาที่ต้องการฝึก</h2>
+          </div>
+          <p className="text-xs text-slate-500">แตะวิชาที่ต้องการเพื่อเข้าสู่หน้าทำข้อสอบทันที</p>
         </div>
-        <p className="text-xs text-slate-500">
-          เลือกวิชาและตั้งค่าจำนวนข้อ ตอบแล้วมีเฉลยละเอียดทันที
-        </p>
-      </div>
 
-      {/* Step 1: Subject Selection */}
-      <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
-              1
-            </div>
-            <h3 className="text-sm font-bold text-slate-800">เลือกหมวดวิชา</h3>
-          </div>
-
-          {/* Part Filter Tabs */}
-          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl text-[11px] font-semibold">
-            <button
-              type="button"
-              onClick={() => setSubjectFilterTab('all')}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                subjectFilterTab === 'all'
-                  ? 'bg-white text-slate-800 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              ทั้งหมด
-            </button>
-            <button
-              type="button"
-              onClick={() => setSubjectFilterTab('ก')}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                subjectFilterTab === 'ก'
-                  ? 'bg-white text-blue-700 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              ภาค ก
-            </button>
-            <button
-              type="button"
-              onClick={() => setSubjectFilterTab('ข')}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                subjectFilterTab === 'ข'
-                  ? 'bg-white text-emerald-700 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              ภาค ข
-            </button>
-          </div>
+        {/* Part Filter Tabs */}
+        <div className="flex items-center bg-slate-200/70 p-1 rounded-2xl text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => setSubjectFilterTab('all')}
+            className={`flex-1 py-1.5 rounded-xl transition-all ${
+              subjectFilterTab === 'all'
+                ? 'bg-white text-slate-800 shadow-sm font-bold'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            ทั้งหมด (8 วิชา)
+          </button>
+          <button
+            type="button"
+            onClick={() => setSubjectFilterTab('ก')}
+            className={`flex-1 py-1.5 rounded-xl transition-all ${
+              subjectFilterTab === 'ก'
+                ? 'bg-white text-blue-700 shadow-sm font-bold'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            ภาค ก (3 วิชา)
+          </button>
+          <button
+            type="button"
+            onClick={() => setSubjectFilterTab('ข')}
+            className={`flex-1 py-1.5 rounded-xl transition-all ${
+              subjectFilterTab === 'ข'
+                ? 'bg-white text-emerald-700 shadow-sm font-bold'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            ภาค ข (5 วิชา)
+          </button>
         </div>
 
         {/* All Subjects Quick Option */}
@@ -260,41 +242,30 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             onClick={() => {
               setSelectedSubjectId('all')
               setSelectedTopic('all')
+              setCurrentStep('configure')
             }}
-            className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between active:scale-[0.99] ${
-              selectedSubjectId === 'all'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
-                : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-700'
-            }`}
+            className="w-full p-4 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 flex items-center justify-between active:scale-[0.98] transition-all"
           >
             <div className="flex items-center gap-3">
-              <span className="text-2xl">📚</span>
-              <div>
-                <span className="text-xs font-bold block leading-tight">
-                  รวมทุกหมวดวิชา (คละข้อสอบ ภาค ก + ภาค ข)
+              <span className="text-3xl">📚</span>
+              <div className="text-left">
+                <span className="text-sm font-bold block leading-tight">
+                  รวมทุกหมวดวิชา (ภาค ก + ภาค ข)
                 </span>
-                <span
-                  className={`text-[10px] block mt-0.5 ${
-                    selectedSubjectId === 'all' ? 'text-blue-100' : 'text-slate-400'
-                  }`}
-                >
-                  สุ่มข้อสอบจากทุกหมวดเพื่อจำลองความพร้อมรอบด้าน
+                <span className="text-[11px] text-blue-100 block mt-0.5">
+                  คละข้อสอบทุกหมวดเพื่อจำลองความพร้อม
                 </span>
               </div>
             </div>
-            {selectedSubjectId === 'all' && (
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <Check className="w-3.5 h-3.5 text-white" />
-              </div>
-            )}
+            <ChevronRight className="w-5 h-5 text-blue-200" />
           </button>
         )}
 
         {/* Subject Grid Cards */}
         <div className="grid grid-cols-2 gap-2.5">
           {filteredSubjects.map((s) => {
-            const isSelected = selectedSubjectId === s.id
             const meta = subjectMeta[s.id] || { icon: '📖', desc: '' }
+            const isMajor = s.id === 'kb-major'
 
             return (
               <button
@@ -303,27 +274,34 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 onClick={() => {
                   setSelectedSubjectId(s.id)
                   setSelectedTopic('all')
+                  if (isMajor) {
+                    // Navigate to major subcategory screen
+                    setCurrentStep('select_major')
+                  } else {
+                    // Directly navigate to configure screen
+                    setCurrentStep('configure')
+                  }
                 }}
-                className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all min-h-[96px] active:scale-[0.98] relative overflow-hidden ${
-                  isSelected
-                    ? 'border-blue-600 bg-blue-50/90 text-blue-900 shadow-md shadow-blue-500/10 ring-2 ring-blue-500'
-                    : 'border-slate-200/90 bg-slate-50/60 hover:bg-slate-100/80 text-slate-700'
+                className={`p-3.5 rounded-3xl border text-left flex flex-col justify-between min-h-[115px] active:scale-[0.97] transition-all relative overflow-hidden bg-white hover:bg-blue-50/40 border-slate-200/90 shadow-sm hover:border-blue-300 ${
+                  isMajor ? 'ring-2 ring-purple-400/40 bg-purple-50/20' : ''
                 }`}
               >
                 <div className="flex items-start justify-between w-full">
-                  <span className="text-xl">{meta.icon}</span>
+                  <span className="text-2xl">{meta.icon}</span>
                   <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       s.part === 'ก'
-                        ? 'bg-blue-100/80 text-blue-700'
-                        : 'bg-emerald-100/80 text-emerald-700'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                        : isMajor
+                        ? 'bg-purple-100 text-purple-800 border border-purple-200 font-extrabold'
+                        : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                     }`}
                   >
-                    ภาค {s.part}
+                    {isMajor ? '4 หมวดย่อย' : `ภาค ${s.part}`}
                   </span>
                 </div>
 
-                <div>
+                <div className="mt-2">
                   <span className="text-xs font-bold block leading-tight text-slate-800">
                     {s.name}
                   </span>
@@ -332,191 +310,168 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                   </span>
                 </div>
 
-                {isSelected && (
-                  <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center shadow-sm">
-                    <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
-                  </div>
-                )}
+                <div className="w-full pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-blue-600">
+                  <span>{isMajor ? 'เลือกหมวด &rarr;' : 'เริ่ม &rarr;'}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
               </button>
             )
           })}
         </div>
+      </div>
+    )
+  }
 
-        {/* Selected Subject Banner */}
-        {selectedSubjectId !== 'all' && (
-          <div className="p-2.5 rounded-xl bg-slate-100/80 border border-slate-200/60 flex items-center justify-between text-xs text-slate-600">
-            <span>
-              วิชาที่เลือก: <b className="text-slate-800">{selectedSubjectObj?.name}</b>
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedSubjectId('all')
-                setSelectedTopic('all')
-              }}
-              className="text-blue-600 font-semibold text-[11px] hover:underline"
-            >
-              เปลี่ยนเป็นรวมทุกวิชา
-            </button>
+  // -------------------------------------------------------------
+  // STEP 2: SELECT MAJOR DISCIPLINE (วิชาเอก - 4 หมวด)
+  // -------------------------------------------------------------
+  if (currentStep === 'select_major') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-5 pb-28 flex flex-col gap-4 animate-fade-in">
+        {/* Back Button & Header */}
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setCurrentStep('select_subject')}
+            className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 p-2 rounded-xl bg-white border border-slate-200 shadow-sm active:scale-95 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>เปลี่ยนวิชา</span>
+          </button>
+
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+            วิชาเอก (วิทยาศาสตร์)
+          </span>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">เลือกหมวดวิชาเอก</h2>
+          <p className="text-xs text-slate-500">แตะหมวดที่ต้องการฝึกฝนเพื่อเข้าสู่การตั้งค่าทันที</p>
+        </div>
+
+        {/* All 4 Major Option */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedTopic('all')
+            setCurrentStep('configure')
+          }}
+          className="w-full p-4 rounded-3xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white shadow-md shadow-purple-500/20 flex items-center justify-between active:scale-[0.98] transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔬</span>
+            <div className="text-left">
+              <span className="text-sm font-bold block leading-tight">
+                รวมทั้ง 4 หมวดวิชาเอก
+              </span>
+              <span className="text-[11px] text-purple-100 block mt-0.5">
+                ฟิสิกส์ + เคมี + ชีววิทยา + โลกดาราศาสตร์
+              </span>
+            </div>
           </div>
-        )}
+          <ChevronRight className="w-5 h-5 text-purple-200" />
+        </button>
+
+        {/* 4 Dedicated Cards */}
+        <div className="grid grid-cols-2 gap-3">
+          {majorDisciplines.map((item) => {
+            const Icon = item.icon
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setSelectedTopic(item.id)
+                  setCurrentStep('configure')
+                }}
+                className={`p-4 rounded-3xl border text-left transition-all flex flex-col justify-between min-h-[135px] active:scale-[0.97] relative shadow-sm ${item.color}`}
+              >
+                <div className="flex items-start justify-between w-full">
+                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center ${item.iconBg}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/90 text-slate-700 border border-slate-200/60 shadow-xs">
+                    {item.badge}
+                  </span>
+                </div>
+
+                <div className="mt-3">
+                  <h4 className="text-sm font-bold leading-tight">{item.label}</h4>
+                  <p className="text-[10px] mt-1 text-slate-500 leading-snug line-clamp-2">
+                    {item.sub}
+                  </p>
+                </div>
+
+                <div className="w-full pt-2 mt-2 border-t border-slate-200/40 flex items-center justify-between text-[10px] font-bold text-slate-700">
+                  <span>เลือกหมวดนี้</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // -------------------------------------------------------------
+  // STEP 3: CONFIGURE (จำนวนข้อ, สุ่ม, เริ่มทำข้อสอบ)
+  // -------------------------------------------------------------
+  return (
+    <div className="max-w-md mx-auto px-4 py-5 pb-28 flex flex-col gap-4 animate-fade-in">
+      {/* Back Button */}
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => {
+            if (selectedSubjectId === 'kb-major') {
+              setCurrentStep('select_major')
+            } else {
+              setCurrentStep('select_subject')
+            }
+          }}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 p-2 rounded-xl bg-white border border-slate-200 shadow-sm active:scale-95 transition-all"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>{selectedSubjectId === 'kb-major' ? 'เปลี่ยนหมวดวิชาเอก' : 'เปลี่ยนวิชา'}</span>
+        </button>
+
+        <span className="text-xs font-bold text-blue-600">ขั้นตอนสุดท้าย</span>
       </div>
 
-      {/* Step 2: Special 4 Science Disciplines for Major Subject */}
-      {selectedSubjectId === 'kb-major' && (
-        <div className="bg-white rounded-3xl p-5 border border-purple-200/80 shadow-sm flex flex-col gap-3.5 animate-fade-in bg-gradient-to-b from-purple-50/30 to-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">
-                2
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-800">เลือกหมวดวิชาเอก</h3>
-                <p className="text-[11px] text-slate-500">
-                  แตะเลือกหมวดที่ต้องการ หรือแตะ &quot;รวมทั้ง 4 หมวด&quot;
-                </p>
-              </div>
-            </div>
-
-            {selectedTopic !== 'all' && (
-              <button
-                type="button"
-                onClick={() => setSelectedTopic('all')}
-                className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-100 hover:bg-purple-100 active:scale-95 transition-all"
-              >
-                รวมทั้ง 4 หมวด
-              </button>
-            )}
-          </div>
-
-          {/* 4 Beautiful Cards */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {majorDisciplines.map((item) => {
-              const isSelected = selectedTopic === item.id
-              const Icon = item.icon
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedTopic(isSelected ? 'all' : item.id)}
-                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between min-h-[105px] active:scale-[0.98] relative overflow-hidden ${
-                    isSelected ? item.activeColor : item.color
-                  }`}
-                >
-                  <div className="flex items-start justify-between w-full">
-                    <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                        isSelected ? 'bg-white/20 text-white' : 'bg-white shadow-sm ' + item.iconColor
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </div>
-
-                    <span
-                      className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
-                        isSelected
-                          ? 'bg-white/20 text-white'
-                          : 'bg-white/80 text-slate-600 border border-slate-200/50'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  </div>
-
-                  <div className="mt-2">
-                    <h4 className="text-xs font-bold leading-tight">{item.label}</h4>
-                    <p
-                      className={`text-[10px] mt-0.5 leading-snug line-clamp-1 ${
-                        isSelected ? 'text-white/80' : 'text-slate-500'
-                      }`}
-                    >
-                      {item.sub}
-                    </p>
-                  </div>
-
-                  {isSelected && (
-                    <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm">
-                      <Check className="w-2.5 h-2.5 text-blue-600 stroke-[3]" />
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="text-center pt-1">
-            <span className="text-[11px] text-slate-500 font-medium">
-              กำลังเลือก: <b className="text-purple-700">{selectedTopic === 'all' ? 'รวมทั้ง 4 หมวด (ฟิสิกส์ เคมี ชีวะ โลกดาราศาสตร์)' : selectedTopic}</b>
+      {/* Selected Subject Banner Card */}
+      <div className="bg-white rounded-3xl p-5 border border-blue-200/80 shadow-sm flex items-center justify-between bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-0.5">
+            วิชาที่พร้อมฝึก
+          </span>
+          <h2 className="text-lg font-bold text-slate-800">
+            {selectedSubjectId === 'all'
+              ? 'รวมทุกหมวดวิชา'
+              : selectedSubjectObj?.name}
+          </h2>
+          {selectedSubjectId === 'kb-major' && (
+            <span className="text-xs font-semibold text-purple-700 mt-0.5 block">
+              หมวด: {selectedTopic === 'all' ? 'รวมทั้ง 4 หมวดวิชาเอก' : selectedTopic}
             </span>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Subtopics for other subjects */}
-      {selectedSubjectId !== 'all' && selectedSubjectId !== 'kb-major' && topics.length > 0 && (
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col gap-3 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-800">เลือกหัวข้อย่อย</h3>
-            {selectedTopic !== 'all' && (
-              <button
-                type="button"
-                onClick={() => setSelectedTopic('all')}
-                className="text-[11px] font-semibold text-blue-600 hover:underline"
-              >
-                เลือกทั้งหมด
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setSelectedTopic('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                selectedTopic === 'all'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              ทุกหัวข้อย่อย
-            </button>
-            {topics.map((t) => {
-              const isSelected = selectedTopic === t
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setSelectedTopic(isSelected ? 'all' : t)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                    isSelected
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {t}
-                </button>
-              )
-            })}
-          </div>
+        <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-2xl shadow-sm">
+          {selectedSubjectId === 'all' ? '📚' : subjectMeta[selectedSubjectId]?.icon || '📖'}
         </div>
-      )}
+      </div>
 
-      {/* Step 3: Question Count & Settings */}
-      <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
-            {selectedSubjectId === 'kb-major' ? '3' : '2'}
-          </div>
-          <h3 className="text-sm font-bold text-slate-800">จำนวนข้อและการสุ่ม</h3>
-        </div>
+      {/* Question Count Setting */}
+      <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col gap-3">
+        <h3 className="text-sm font-bold text-slate-800">เลือกจำนวนข้อสอบ</h3>
 
-        {/* Count Selector */}
         <div className="grid grid-cols-4 gap-2">
           {[
-            { count: 10, label: '10 ข้อ', desc: 'ด่วน 5 นาที' },
-            { count: 20, label: '20 ข้อ', desc: 'เน้นทบทวน' },
-            { count: 50, label: '50 ข้อ', desc: 'ซ้อมจัดเต็ม' },
-            { count: 0, label: 'ทั้งหมด', desc: 'ครบทุกข้อ' }
+            { count: 10, label: '10 ข้อ', desc: 'เร็ว 5 นาที' },
+            { count: 20, label: '20 ข้อ', desc: 'เน้นทวน' },
+            { count: 50, label: '50 ข้อ', desc: 'จัดเต็ม' },
+            { count: 0, label: 'ทั้งหมด', desc: 'ครบชุด' }
           ].map((item) => {
             const isSelected = questionCount === item.count
             return (
@@ -524,16 +479,16 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 key={item.count}
                 type="button"
                 onClick={() => setQuestionCount(item.count)}
-                className={`py-2.5 px-1.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center active:scale-[0.98] ${
+                className={`py-3 px-1 rounded-2xl border text-center transition-all flex flex-col items-center justify-center active:scale-[0.97] ${
                   isSelected
-                    ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm ring-2 ring-blue-500'
-                    : 'border-slate-200 bg-slate-50/70 text-slate-700 hover:bg-slate-100'
+                    ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-2 ring-blue-300'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 <span className="text-xs font-bold block">{item.label}</span>
                 <span
                   className={`text-[9px] block mt-0.5 ${
-                    isSelected ? 'text-blue-600 font-medium' : 'text-slate-400'
+                    isSelected ? 'text-blue-100 font-normal' : 'text-slate-400'
                   }`}
                 >
                   {item.desc}
@@ -542,52 +497,40 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             )
           })}
         </div>
+      </div>
 
-        {/* Shuffle Option */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-              <Shuffle className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <span className="text-xs font-bold text-slate-700 block leading-tight">
-                สุ่มลำดับข้อสอบ
-              </span>
-              <span className="text-[10px] text-slate-400 block">
-                สลับข้อไม่ให้จำตำแหน่งคำตอบเดิม
-              </span>
-            </div>
+      {/* Shuffle Setting */}
+      <div className="bg-white rounded-3xl p-4 px-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600">
+            <Shuffle className="w-4 h-4" />
           </div>
-
-          <button
-            type="button"
-            onClick={() => setIsShuffle(!isShuffle)}
-            className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
-              isShuffle ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
-            }`}
-          >
-            <div className="w-4 h-4 rounded-full bg-white shadow-md transition-transform" />
-          </button>
+          <div>
+            <span className="text-xs font-bold text-slate-800 block">สุ่มลำดับข้อสอบ</span>
+            <span className="text-[10px] text-slate-400 block">สลับข้อไม่ให้จำตำแหน่งเดิม</span>
+          </div>
         </div>
 
-        {/* Big Start Button */}
         <button
-          onClick={handleStartPractice}
-          disabled={isLoading}
-          className="w-full mt-2 flex items-center justify-center gap-2 py-4 px-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 active:scale-[0.98] text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all"
+          type="button"
+          onClick={() => setIsShuffle(!isShuffle)}
+          className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
+            isShuffle ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
+          }`}
         >
-          <Play className="w-4 h-4 fill-current" />
-          <span>{isLoading ? 'กำลังโหลดข้อสอบ...' : 'เริ่มฝึกทำข้อสอบทันที'}</span>
+          <div className="w-4 h-4 rounded-full bg-white shadow-md transition-transform" />
         </button>
       </div>
 
-      {/* Helpful Tip */}
-      <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-100 text-xs text-blue-900 flex items-start gap-2.5">
-        <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-        <p className="text-[11px] leading-relaxed text-blue-800">
-          <b>ทริคการติว:</b> ทำข้อสอบแล้วมีเฉลยให้ทันที หากตอบผิดระบบจะบันทึกเข้า <b>สมุดข้อผิด</b> ให้ทบทวนซ้ำจนตอบถูก 2 ครั้งติดเพื่อความแม่นยำ
-        </p>
-      </div>
+      {/* Big Action Button */}
+      <button
+        onClick={handleStartPractice}
+        disabled={isLoading}
+        className="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 active:scale-[0.98] text-white font-bold text-base shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all mt-2"
+      >
+        <Play className="w-5 h-5 fill-current" />
+        <span>{isLoading ? 'กำลังโหลดข้อสอบ...' : 'เริ่มทำข้อสอบ'}</span>
+      </button>
     </div>
   )
 }
