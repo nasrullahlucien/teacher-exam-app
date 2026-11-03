@@ -70,6 +70,22 @@ export const MAJOR_SYLLABUS_TOPICS: Record<string, string[]> = {
   ]
 }
 
+export function isMatchingTopic(qTopic?: string, targetTopic?: string): boolean {
+  if (!qTopic || !targetTopic) return false
+  if (qTopic === targetTopic) return true
+  // Match prefix before dash/hyphen or parenthesis, e.g. "2. แรงในชีวิตประจำวัน"
+  const qClean = qTopic.split(/[-–(]/)[0].trim()
+  const targetClean = targetTopic.split(/[-–(]/)[0].trim()
+  if (qClean && targetClean && qClean === targetClean) return true
+
+  // Match by number prefix e.g. "2."
+  const qNum = qTopic.match(/^(\d+)\./)?.[1]
+  const targetNum = targetTopic.match(/^(\d+)\./)?.[1]
+  if (qNum && targetNum && qNum === targetNum) return true
+
+  return false
+}
+
 export const PracticeView: React.FC<PracticeViewProps> = ({
   initialSubjectId,
   initialTopic,
@@ -140,7 +156,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         }
 
         if (selectedTopic !== 'all') {
-          pool = pool.filter((q) => q.topic === selectedTopic)
+          pool = pool.filter((q) => isMatchingTopic(q.topic, selectedTopic))
           title = `${title} • ${selectedTopic}`
         }
       } else {
@@ -149,7 +165,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         pool = await fetchQuestionsBySubject(selectedSubjectId)
 
         if (selectedTopic !== 'all') {
-          pool = pool.filter((q) => q.topic === selectedTopic)
+          pool = pool.filter((q) => isMatchingTopic(q.topic, selectedTopic))
           title = `${title} (${selectedTopic})`
         }
       }
@@ -545,7 +561,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         <div className="flex flex-col gap-2">
           {syllabusList.map((topicName, idx) => {
             const count = majorQuestions.filter(
-              (q) => q.discipline === selectedDiscipline && q.topic === topicName
+              (q) => q.discipline === selectedDiscipline && isMatchingTopic(q.topic, topicName)
             ).length
             const hasQuestions = count > 0
 
