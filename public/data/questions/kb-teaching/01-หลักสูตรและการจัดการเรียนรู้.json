@@ -1,0 +1,62 @@
+[
+  {
+    "id": "kb-teaching-001",
+    "subject": "kb-teaching",
+    "topic": "การจัดการเรียนรู้เชิงรุก (Active Learning)",
+    "question": "ข้อใดเป็นลักษณะสำคัญที่สุดของการจัดการเรียนรู้เชิงรุก (Active Learning)",
+    "choices": [
+      "ครูเตรียมสื่อและบรรยายอย่างละเอียด",
+      "ผู้เรียนมีส่วนร่วมลงมือปฏิบัติและสร้างองค์ความรู้ด้วยตนเอง",
+      "ผู้เรียนทำแบบฝึกหัดท้ายบทในสมุดทุกคน",
+      "ครูใช้เทคโนโลยีเปิดวิดีโอให้นักเรียนดูตลอดคาบ"
+    ],
+    "answer": 1,
+    "explanation": "Active Learning เน้นกระบวนการที่ผู้เรียนได้คิด ลงมือปฏิบัติ สื่อสาร และสะท้อนคิดเพื่อสร้างความรู้ความเข้าใจด้วยตนเอง มิใช่การรับฟังข้อมูลเพียงอย่างเดียว",
+    "source": "แนวทางการจัดการเรียนรู้เชิงรุก สพฐ."
+  },
+  {
+    "id": "kb-teaching-005",
+    "subject": "kb-teaching",
+    "topic": "การออกแบบแผนการจัดการเรียนรู้",
+    "question": "การจัดการเรียนรู้แบบ Backward Design ประกอบด้วย 3 ขั้นตอน ลำดับขั้นตอนแรกคือข้อใด",
+    "choices": [
+      "กำหนดกิจกรรมการเรียนรู้และสื่อ",
+      "กำหนดหลักฐานการเรียนรู้และร่องรอยการประเมิน",
+      "กำหนดเป้าหมายการเรียนรู้หรือผลลัพธ์ที่ต้องการ",
+      "กำหนดหัวข้อบทเรียนและเวลาสอน"
+    ],
+    "answer": 2,
+    "explanation": "Backward Design ของ Wiggins & McTighe เริ่มจาก: ขั้น 1 กำหนดผลลัพธ์ที่ต้องการ (Identify desired results) -> ขั้น 2 กำหนดหลักฐานประเมิน -> ขั้น 3 วางแผนประสบการณ์การเรียนรู้",
+    "source": "Understanding by Design (UbD)"
+  },
+  {
+    "id": "kb-teaching-006",
+    "subject": "kb-teaching",
+    "topic": "อนุกรมวิธานของบลูม (Bloom's Taxonomy)",
+    "question": "ตาม Bloom's Taxonomy ฉบับปรับปรุง (Anderson & Krathwohl) ทักษะทางพุทธิพิสัยระดับสูงสุดคือข้อใด",
+    "choices": [
+      "Evaluating (การประเมินค่า)",
+      "Creating (การสร้างสรรค์)",
+      "Analyzing (การวิเคราะห์)",
+      "Applying (การประยุกต์ใช้)"
+    ],
+    "answer": 1,
+    "explanation": "ใน Bloom ฉบับปรับปรุง ระดับทักษะทางความคิดเรียงจากล่างขึ้นบนคือ Remember, Understand, Apply, Analyze, Evaluate, และสูงสุดคือ Creating (การสร้างสรรค์)",
+    "source": "Revised Bloom's Taxonomy"
+  },
+  {
+    "id": "kb-teaching-009",
+    "subject": "kb-teaching",
+    "topic": "ทฤษฎีการเรียนรู้",
+    "question": "การจัดการเรียนรู้ที่ให้เด็กได้ค้นพบความรู้ด้วยตนเองผ่านการแก้ปัญหา (Discovery Learning) สัมพันธ์กับนักคิดท่านใด",
+    "choices": [
+      "Jerome Bruner",
+      "B.F. Skinner",
+      "John B. Watson",
+      "Ivan Pavlov"
+    ],
+    "answer": 0,
+    "explanation": "Jerome Bruner เป็นผู้เสนอแนวคิดการเรียนรู้แบบการค้นพบ (Discovery Learning) และแนวคิดโครงสร้างแบบเกลียว (Spiral Curriculum)",
+    "source": "ทฤษฎีการเรียนรู้กลุ่มพุทธิปัญญานิยม"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "ka-english-008",
+    "subject": "ka-english",
+    "topic": "Reading Comprehension",
+    "question": "Notice: 'All teachers must submit lesson plans by Friday 4 PM without exception.' What does the notice imply?",
+    "choices": [
+      "Lesson plans are optional this week",
+      "Late submissions will not be accepted",
+      "Teachers can submit plans on Saturday morning",
+      "Only new teachers need to submit plans"
+    ],
+    "answer": 1,
+    "explanation": "'without exception' หมายถึง โดยไม่มีข้อยกเว้น แสดงว่าต้องส่งภายในวันศุกร์ 16.00 น. และไม่รับการส่งล่าช้า",
+    "source": "School Notices & Reading"
+  }
+]

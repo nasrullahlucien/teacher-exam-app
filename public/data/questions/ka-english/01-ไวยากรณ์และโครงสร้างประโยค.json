@@ -1,0 +1,77 @@
+[
+  {
+    "id": "ka-english-001",
+    "subject": "ka-english",
+    "topic": "Grammar & Structure",
+    "question": "Neither the teacher nor the students ______ present in the auditorium yesterday.",
+    "choices": [
+      "was",
+      "were",
+      "is",
+      "are"
+    ],
+    "answer": 1,
+    "explanation": "โครงสร้าง Neither... nor... กริยาจะผันตามประธานตัวหลัง คือ 'the students' ซึ่งเป็นพหูพจน์ และมีคำว่า yesterday แสดงอดีต จึงใช้ 'were'",
+    "source": "ข้อสอบภาษาอังกฤษ ก.พ. / ครูผู้ช่วย"
+  },
+  {
+    "id": "ka-english-002",
+    "subject": "ka-english",
+    "topic": "Grammar & Structure",
+    "question": "If she had studied harder, she ______ the qualifying examination.",
+    "choices": [
+      "will pass",
+      "would pass",
+      "would have passed",
+      "had passed"
+    ],
+    "answer": 2,
+    "explanation": "ประโยคเงื่อนไขแบบที่ 3 (Third Conditional: เหตุการณ์สมมติในอดีต) โครงสร้าง If + past perfect (had studied), S + would have + V.3 (would have passed)",
+    "source": "Conditional Sentences Guide"
+  },
+  {
+    "id": "ka-english-005",
+    "subject": "ka-english",
+    "topic": "Grammar & Structure",
+    "question": "The boy ______ won the national science competition is in grade 9.",
+    "choices": [
+      "who",
+      "whom",
+      "whose",
+      "which"
+    ],
+    "answer": 0,
+    "explanation": "ใช้ 'who' ทำหน้าที่เป็นประธานของ relative clause แทนคำนามบุคคลคือ 'The boy'",
+    "source": "Relative Pronouns Practice"
+  },
+  {
+    "id": "ka-english-007",
+    "subject": "ka-english",
+    "topic": "Grammar & Structure",
+    "question": "She has been working as an English instructor at this school ______ 2018.",
+    "choices": [
+      "for",
+      "since",
+      "during",
+      "in"
+    ],
+    "answer": 1,
+    "explanation": "Present Perfect Continuous ใช้กับจุดเริ่มต้นของเวลา (ปี ค.ศ. 2018) จึงใช้ 'since'",
+    "source": "English Tenses Review"
+  },
+  {
+    "id": "ka-english-010",
+    "subject": "ka-english",
+    "topic": "Grammar & Structure",
+    "question": "Despite ______ hard all semester, he failed to achieve the target score.",
+    "choices": [
+      "study",
+      "studies",
+      "studying",
+      "studied"
+    ],
+    "answer": 2,
+    "explanation": "คำบุพบท 'Despite' ต้องตามด้วย คำนาม หรือ Gerund (V-ing) จึงใช้ 'studying'",
+    "source": "Prepositional Phrases Review"
+  }
+]

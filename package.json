@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "python3 scripts/sync_questions.py",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync-questions": "python3 scripts/sync_questions.py"
   },
   "dependencies": {
     "dexie": "^4.0.10",

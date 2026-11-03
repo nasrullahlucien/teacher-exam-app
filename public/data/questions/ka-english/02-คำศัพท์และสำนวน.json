@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ka-english-003",
+    "subject": "ka-english",
+    "topic": "Vocabulary in Context",
+    "question": "The principal decided to ______ the meeting until next Monday due to an urgent inspection.",
+    "choices": [
+      "put off",
+      "call off",
+      "give up",
+      "turn down"
+    ],
+    "answer": 0,
+    "explanation": "'put off' หมายถึง เลื่อนเวลาออกไป (postpone) ส่วน 'call off' หมายถึง ยกเลิก (cancel)",
+    "source": "Phrasal Verbs for Teacher Exam"
+  },
+  {
+    "id": "ka-english-004",
+    "subject": "ka-english",
+    "topic": "Conversation & Expression",
+    "question": "Teacher A: 'Would you mind helping me carry these books to the library?'\nTeacher B: '______, I'd be glad to help.'",
+    "choices": [
+      "Yes, of course",
+      "Not at all",
+      "Never mind",
+      "No problem at all, I'm busy"
+    ],
+    "answer": 1,
+    "explanation": "คำถามขึ้นต้นด้วย 'Would you mind...?' (คุณจะรังเกียจไหมถ้า...) หากยินดีช่วย ต้องตอบปฏิเสธว่า 'Not at all' (ไม่รังเกียจเลย ยินดีอย่างยิ่ง)",
+    "source": "Conversational English in School"
+  },
+  {
+    "id": "ka-english-006",
+    "subject": "ka-english",
+    "topic": "Vocabulary & Synonyms",
+    "question": "Teachers should encourage students to be 'innovative' in their project designs. Which word is closest in meaning to 'innovative'?",
+    "choices": [
+      "traditional",
+      "creative",
+      "strict",
+      "obedient"
+    ],
+    "answer": 1,
+    "explanation": "'Innovative' หมายถึง มีความคิดริเริ่มสร้างสรรค์ มีความหมายใกล้เคียงกับคำว่า 'creative'",
+    "source": "Pedagogy Vocabulary"
+  },
+  {
+    "id": "ka-english-009",
+    "subject": "ka-english",
+    "topic": "Vocabulary in Context",
+    "question": "To ensure fairness, the exam papers must be evaluated ______ by an independent committee.",
+    "choices": [
+      "objectively",
+      "emotionally",
+      "carelessly",
+      "privately"
+    ],
+    "answer": 0,
+    "explanation": "'objectively' หมายถึง อย่างเป็นกลาง โดยไม่ใช้ความรู้สึกส่วนตัว เข้ากับบริบทการตรวจข้อสอบอย่างเป็นธรรม",
+    "source": "Academic English Test"
+  }
+]
