@@ -1,7 +1,7 @@
 import React from 'react'
-import { Home, BookOpen, AlertCircle, CheckSquare } from 'lucide-react'
+import { Home, BookOpen, AlertCircle, Clock, Calendar } from 'lucide-react'
 
-export type NavTab = 'dashboard' | 'practice' | 'mistakes' | 'checklist'
+export type NavTab = 'dashboard' | 'practice' | 'mock' | 'mistakes' | 'calendar' | 'checklist'
 
 interface BottomNavProps {
   currentTab: NavTab
@@ -17,16 +17,17 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const tabs = [
     { id: 'dashboard' as NavTab, label: 'หน้าหลัก', icon: Home },
     { id: 'practice' as NavTab, label: 'ฝึกข้อสอบ', icon: BookOpen },
-    { id: 'mistakes' as NavTab, label: 'สมุดข้อผิด', icon: AlertCircle, badge: mistakeCount },
-    { id: 'checklist' as NavTab, label: 'เช็กลิสต์', icon: CheckSquare }
+    { id: 'mock' as NavTab, label: 'จำลองสอบ', icon: Clock },
+    { id: 'mistakes' as NavTab, label: 'ข้อผิด', icon: AlertCircle, badge: mistakeCount },
+    { id: 'calendar' as NavTab, label: 'ปฏิทิน/สถิติ', icon: Calendar }
   ]
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/80 safe-area-pb">
-      <div className="max-w-md mx-auto grid grid-cols-4 h-16">
+      <div className="max-w-md mx-auto grid grid-cols-5 h-16">
         {tabs.map((tab) => {
           const Icon = tab.icon
-          const isActive = currentTab === tab.id
+          const isActive = currentTab === tab.id || (tab.id === 'calendar' && currentTab === 'checklist')
           return (
             <button
               key={tab.id}
@@ -45,7 +46,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                   </span>
                 )}
               </div>
-              <span className="text-[11px] leading-none tracking-tight">{tab.label}</span>
+              <span className="text-[10px] leading-none tracking-tight">{tab.label}</span>
               {isActive && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full" />
               )}

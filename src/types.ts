@@ -32,6 +32,16 @@ export interface MistakeRecord {
   lastAttemptDate: string
 }
 
+export interface ExamQuestionDetail {
+  questionId: string
+  subjectId: string
+  topic: string
+  userAnswer: number | null
+  correctAnswer: number
+  isCorrect: boolean
+  isFlagged?: boolean
+}
+
 export interface ExamHistoryRecord {
   id?: number
   mode: 'practice' | 'mock'
@@ -41,6 +51,23 @@ export interface ExamHistoryRecord {
   percentage: number
   timeSpentSeconds: number
   date: string
+  details?: ExamQuestionDetail[]
+  subjectBreakdown?: Record<string, { total: number; correct: number; name: string }>
+  topicBreakdown?: Record<string, { total: number; correct: number }>
+}
+
+export interface DailyActivityRecord {
+  date: string // YYYY-MM-DD
+  questionsAnswered: number
+  examsCompleted: number
+  goal: number
+  goalMet: boolean
+}
+
+export interface UserSettings {
+  id: string // 'user_settings'
+  targetExamDate?: string
+  dailyQuestionGoal: number
 }
 
 export interface ReadingChecklistRecord {

@@ -3,8 +3,9 @@ import { Header } from './components/Header'
 import { BottomNav, type NavTab } from './components/BottomNav'
 import { Dashboard } from './components/Dashboard'
 import { PracticeView } from './components/PracticeView'
+import { MockExamView } from './components/MockExamView'
 import { MistakesView } from './components/MistakesView'
-import { ReadingChecklistView } from './components/ReadingChecklistView'
+import { CalendarAnalyticsView } from './components/CalendarAnalyticsView'
 import { BackupModal } from './components/BackupModal'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
@@ -33,6 +34,13 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handlePracticeWeakTopic = (subjectId: string, topic: string) => {
+    setSelectedSubjectId(subjectId)
+    setSelectedTopic(topic)
+    setCurrentTab('practice')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-blue-500 selection:text-white">
       {/* Top Header */}
@@ -51,8 +59,14 @@ export function App() {
             }}
           />
         )}
+        {currentTab === 'mock' && <MockExamView />}
         {currentTab === 'mistakes' && <MistakesView />}
-        {currentTab === 'checklist' && <ReadingChecklistView />}
+        {currentTab === 'calendar' && (
+          <CalendarAnalyticsView onPracticeTopic={handlePracticeWeakTopic} />
+        )}
+        {currentTab === 'checklist' && (
+          <CalendarAnalyticsView initialSubTab="checklist" onPracticeTopic={handlePracticeWeakTopic} />
+        )}
       </main>
 
       {/* Bottom Mobile Navigation */}

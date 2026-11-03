@@ -147,6 +147,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         </button>
       </div>
 
+      {/* Quick Action: Mock Exam Banner */}
+      <button
+        type="button"
+        onClick={() => onNavigate('mock')}
+        className="w-full p-4 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20 flex items-center justify-between active:scale-[0.98] transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl">
+            ⏱️
+          </div>
+          <div className="text-left">
+            <span className="text-sm font-bold block leading-tight">
+              ห้องจำลองสอบเสมือนจริง
+            </span>
+            <span className="text-[11px] text-indigo-100 block mt-0.5">
+              จับเวลาจริง ปักหมุดข้อทบทวน และวัดระดับความพร้อม
+            </span>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-indigo-200" />
+      </button>
+
       {/* Subjects Section */}
       <div className="flex flex-col gap-4">
         {/* Part ก */}
