@@ -19,7 +19,56 @@ interface PracticeViewProps {
   onClearInitialSubject?: () => void
 }
 
-type Step = 'select_subject' | 'select_major' | 'configure'
+type Step = 'select_subject' | 'select_major_discipline' | 'select_major_subtopic' | 'configure'
+
+// Topics directly from สารบัญวิชาเอก.md
+export const MAJOR_SYLLABUS_TOPICS: Record<string, string[]> = {
+  '⚡ ฟิสิกส์': [
+    '1. ธรรมชาติของฟิสิกส์ ปริมาณทางฟิสิกส์ หน่วย และ การวัด',
+    '2. แรงในชีวิตประจำวัน (แรงลัพธ์, แรงเสียดทาน...)',
+    '3. สนามไฟฟ้า สนามแม่เหล็ก และ สนามโน้มถ่วง',
+    '4. การเคลื่อนที่ 1 มิติ',
+    '5. การเคลื่อนที่ 2 มิติ (วงกลม, ซิมเปิลฮาร์มอนิก, โพรเจคไทล์)',
+    '6. งาน และกำลัง',
+    '7. พลังงานศักย์ พลังงานจลน์ และพลังงานกล',
+    '8. พลังงานความร้อน',
+    '9. คลื่นกล และ คลื่นแม่เหล็กไฟฟ้า',
+    '10. คลื่นแสง ทัศนอุปกรณ์ และการมองเห็นของดวงตา',
+    '11. ไฟฟ้า'
+  ],
+  '🧪 เคมี': [
+    '1. เคมีพื้นฐาน สารในชีวิตประจำวัน',
+    '2. สารละลายและร้อยละความเข้มข้น',
+    '3. การแยกสารผสม',
+    '4. ปฏิกิริยาเคมีในชีวิตประจำวัน',
+    '5. กรด-เบส',
+    '6. โครงสร้างอะตอม และสมบัติของธาตุตามตารางธาตุ',
+    '7. โมล และ ปริมาณสารสัมพันธ์',
+    '8. กัมมันตภาพรังสี และ ครึ่งชีวิต',
+    '9. โครงสร้างของวัสดุ และ พอลิเมอร์',
+    '10. สารชีวโมเลกุลของสิ่งมีชีวิต'
+  ],
+  '🧬 ชีววิทยา': [
+    '1. เซลล์ และ การลำเลียงสารผ่านเซลล์',
+    '2. การแบ่งเซลล์',
+    '3. การหายใจระดับเซลล์',
+    '4. Taxonomy และ ความหลากหลายทางชีวภาพ',
+    '5. ระบบนิเวศ และ สิ่งแวดล้อม',
+    '6. ระบบร่างกายของสัตว์',
+    '7. ระบบร่างกายของมนุษย์',
+    '8. ความรู้เรื่องพืช'
+  ],
+  '🪐 โลก ดาราศาสตร์ และอวกาศ': [
+    '1. โครงสร้างของโลก และ การเปลี่ยนแปลงของเปลือกโลก',
+    '2. ทรัพยากรณ์ - ดิน',
+    '3. ทรัพยากรณ์ - หินและแร่ธาตุ',
+    '4. ทรัพยากรณ์ - น้ำ',
+    '5. เชื้อเพลิง และ พลังงานทดแทน',
+    '6. บรรยากาศของโลก',
+    '7. การพยากรณ์อากาศ และ ภัยพิบัติทางธรรมชาติ',
+    '8. ปฏิสัมพันธ์ของระบบสุริยะ และ เทคโนโลยีทางอวกาศ'
+  ]
+}
 
 export const PracticeView: React.FC<PracticeViewProps> = ({
   initialSubjectId,
@@ -29,7 +78,9 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [currentStep, setCurrentStep] = useState<Step>('select_subject')
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('all')
+  const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all')
   const [selectedTopic, setSelectedTopic] = useState<string>('all')
+  const [majorQuestions, setMajorQuestions] = useState<Question[]>([])
   const [questionCount, setQuestionCount] = useState<number>(10)
   const [isShuffle, setIsShuffle] = useState<boolean>(true)
   const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -40,29 +91,35 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   } | null>(null)
 
   useEffect(() => {
-    fetchSubjects().then((res) => {
-      setSubjects(res)
-      if (initialSubjectId) {
-        setSelectedSubjectId(initialSubjectId)
-        if (initialSubjectId === 'kb-major') {
-          if (initialTopic) {
-            setSelectedTopic(initialTopic)
+    Promise.all([fetchSubjects(), fetchQuestionsBySubject('kb-major').catch(() => [])]).then(
+      ([resSubj, resMajor]) => {
+        setSubjects(resSubj)
+        setMajorQuestions(resMajor)
+
+        if (initialSubjectId) {
+          setSelectedSubjectId(initialSubjectId)
+          if (initialSubjectId === 'kb-major') {
+            if (initialTopic) {
+              if (MAJOR_SYLLABUS_TOPICS[initialTopic]) {
+                setSelectedDiscipline(initialTopic)
+                setSelectedTopic('all')
+                setCurrentStep('select_major_subtopic')
+              } else {
+                setSelectedTopic(initialTopic)
+                setCurrentStep('configure')
+              }
+            } else {
+              setCurrentStep('select_major_discipline')
+            }
+          } else {
+            if (initialTopic) setSelectedTopic(initialTopic)
             setCurrentStep('configure')
-          } else {
-            setCurrentStep('select_major')
           }
-        } else {
-          if (initialTopic) {
-            setSelectedTopic(initialTopic)
-          } else {
-            setSelectedTopic('all')
-          }
-          setCurrentStep('configure')
+          if (onClearInitialSubject) onClearInitialSubject()
         }
-        if (onClearInitialSubject) onClearInitialSubject()
+        setIsLoading(false)
       }
-      setIsLoading(false)
-    })
+    )
   }, [initialSubjectId, initialTopic, onClearInitialSubject])
 
   const handleStartPractice = async () => {
@@ -73,6 +130,19 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
 
       if (selectedSubjectId === 'all') {
         pool = await fetchAllQuestions()
+      } else if (selectedSubjectId === 'kb-major') {
+        pool = await fetchQuestionsBySubject('kb-major')
+        title = 'วิชาเอก (วิทยาศาสตร์)'
+
+        if (selectedDiscipline !== 'all') {
+          pool = pool.filter((q) => q.discipline === selectedDiscipline)
+          title = `${selectedDiscipline}`
+        }
+
+        if (selectedTopic !== 'all') {
+          pool = pool.filter((q) => q.topic === selectedTopic)
+          title = `${title} • ${selectedTopic}`
+        }
       } else {
         const subj = subjects.find((s) => s.id === selectedSubjectId)
         title = subj?.name || 'ฝึกแยกหมวด'
@@ -85,7 +155,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       }
 
       if (pool.length === 0) {
-        alert('ไม่พบข้อสอบในหมวดที่เลือก')
+        alert('ยังไม่มีข้อสอบในหัวข้อนี้ กำลังทยอยเพิ่มข้อสอบเร็วๆ นี้ครับ')
         setIsLoading(false)
         return
       }
@@ -146,7 +216,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       icon: Atom,
       color: 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-900',
       iconBg: 'bg-blue-100 text-blue-600',
-      sub: 'การเคลื่อนที่ แรง งาน พลังงาน ไฟฟ้า',
+      sub: '11 เรื่อง (ธรรมชาติ แรง คลื่น ไฟฟ้า)',
       badge: '⚡ Physics'
     },
     {
@@ -155,7 +225,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       icon: FlaskConical,
       color: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-900',
       iconBg: 'bg-emerald-100 text-emerald-600',
-      sub: 'สสาร ตารางธาตุ พันธะเคมี กรด-เบส',
+      sub: '10 เรื่อง (สาร สารละลาย กรด-เบส ตารางธาตุ)',
       badge: '🧪 Chemistry'
     },
     {
@@ -164,7 +234,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       icon: Dna,
       color: 'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-900',
       iconBg: 'bg-purple-100 text-purple-600',
-      sub: 'เซลล์ ออร์แกเนลล์ พันธุศาสตร์ เมนเดล',
+      sub: '8 เรื่อง (เซลล์ พันธุศาสตร์ พืช สัตว์)',
       badge: '🧬 Biology'
     },
     {
@@ -173,7 +243,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       icon: Orbit,
       color: 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900',
       iconBg: 'bg-amber-100 text-amber-600',
-      sub: 'ชั้นบรรยากาศ น้ำเกิดน้ำตาย อวกาศ',
+      sub: '8 เรื่อง (เปลือกโลก ดิน หิน น้ำ อวกาศ)',
       badge: '🪐 Earth & Space'
     }
   ]
@@ -241,6 +311,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             type="button"
             onClick={() => {
               setSelectedSubjectId('all')
+              setSelectedDiscipline('all')
               setSelectedTopic('all')
               setCurrentStep('configure')
             }}
@@ -275,10 +346,9 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                   setSelectedSubjectId(s.id)
                   setSelectedTopic('all')
                   if (isMajor) {
-                    // Navigate to major subcategory screen
-                    setCurrentStep('select_major')
+                    setCurrentStep('select_major_discipline')
                   } else {
-                    // Directly navigate to configure screen
+                    setSelectedDiscipline('all')
                     setCurrentStep('configure')
                   }
                 }}
@@ -325,7 +395,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   // -------------------------------------------------------------
   // STEP 2: SELECT MAJOR DISCIPLINE (วิชาเอก - 4 หมวด)
   // -------------------------------------------------------------
-  if (currentStep === 'select_major') {
+  if (currentStep === 'select_major_discipline') {
     return (
       <div className="max-w-md mx-auto px-4 py-5 pb-28 flex flex-col gap-4 animate-fade-in">
         {/* Back Button & Header */}
@@ -346,13 +416,14 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
 
         <div>
           <h2 className="text-xl font-bold text-slate-800">เลือกหมวดวิชาเอก</h2>
-          <p className="text-xs text-slate-500">แตะหมวดที่ต้องการฝึกฝนเพื่อเข้าสู่การตั้งค่าทันที</p>
+          <p className="text-xs text-slate-500">แตะหมวดที่ต้องการเพื่อดูหัวข้อย่อยตามสารบัญ</p>
         </div>
 
         {/* All 4 Major Option */}
         <button
           type="button"
           onClick={() => {
+            setSelectedDiscipline('all')
             setSelectedTopic('all')
             setCurrentStep('configure')
           }}
@@ -362,7 +433,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             <span className="text-2xl">🔬</span>
             <div className="text-left">
               <span className="text-sm font-bold block leading-tight">
-                รวมทั้ง 4 หมวดวิชาเอก
+                รวมทั้ง 4 หมวดวิชาเอก ({majorQuestions.length} ข้อ)
               </span>
               <span className="text-[11px] text-purple-100 block mt-0.5">
                 ฟิสิกส์ + เคมี + ชีววิทยา + โลกดาราศาสตร์
@@ -376,23 +447,25 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         <div className="grid grid-cols-2 gap-3">
           {majorDisciplines.map((item) => {
             const Icon = item.icon
+            const count = majorQuestions.filter((q) => q.discipline === item.id).length
 
             return (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => {
-                  setSelectedTopic(item.id)
-                  setCurrentStep('configure')
+                  setSelectedDiscipline(item.id)
+                  setSelectedTopic('all')
+                  setCurrentStep('select_major_subtopic')
                 }}
-                className={`p-4 rounded-3xl border text-left transition-all flex flex-col justify-between min-h-[135px] active:scale-[0.97] relative shadow-sm ${item.color}`}
+                className={`p-4 rounded-3xl border text-left transition-all flex flex-col justify-between min-h-[140px] active:scale-[0.97] relative shadow-sm ${item.color}`}
               >
                 <div className="flex items-start justify-between w-full">
                   <div className={`w-9 h-9 rounded-2xl flex items-center justify-center ${item.iconBg}`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/90 text-slate-700 border border-slate-200/60 shadow-xs">
-                    {item.badge}
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200 shadow-xs">
+                    {count} ข้อ
                   </span>
                 </div>
 
@@ -403,8 +476,8 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                   </p>
                 </div>
 
-                <div className="w-full pt-2 mt-2 border-t border-slate-200/40 flex items-center justify-between text-[10px] font-bold text-slate-700">
-                  <span>เลือกหมวดนี้</span>
+                <div className="w-full pt-2 mt-2 border-t border-slate-200/50 flex items-center justify-between text-[10px] font-bold text-slate-700">
+                  <span>ดูหัวข้อย่อย &rarr;</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </div>
               </button>
@@ -416,7 +489,117 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   }
 
   // -------------------------------------------------------------
-  // STEP 3: CONFIGURE (จำนวนข้อ, สุ่ม, เริ่มทำข้อสอบ)
+  // STEP 3: SELECT MAJOR SUBTOPIC (ตามสารบัญวิชาเอก.md)
+  // -------------------------------------------------------------
+  if (currentStep === 'select_major_subtopic') {
+    const syllabusList = MAJOR_SYLLABUS_TOPICS[selectedDiscipline] || []
+    const disciplineCount = majorQuestions.filter((q) => q.discipline === selectedDiscipline).length
+
+    return (
+      <div className="max-w-md mx-auto px-4 py-5 pb-28 flex flex-col gap-4 animate-fade-in">
+        {/* Back Button & Header */}
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setCurrentStep('select_major_discipline')}
+            className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 p-2 rounded-xl bg-white border border-slate-200 shadow-sm active:scale-95 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>เปลี่ยนหมวด</span>
+          </button>
+
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+            {selectedDiscipline}
+          </span>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">เลือกหัวข้อย่อย</h2>
+          <p className="text-xs text-slate-500">อ้างอิงตามสารบัญวิชาเอก (แตะเพื่อเริ่มฝึกทำข้อสอบ)</p>
+        </div>
+
+        {/* All topics in this discipline option */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedTopic('all')
+            setCurrentStep('configure')
+          }}
+          className="w-full p-4 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 flex items-center justify-between active:scale-[0.98] transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚡</span>
+            <div className="text-left">
+              <span className="text-sm font-bold block leading-tight">
+                รวมทุกเรื่องในวิชา{selectedDiscipline.replace(/^[^\s]+\s*/, '')}
+              </span>
+              <span className="text-[11px] text-blue-100 block mt-0.5">
+                สุ่มข้อสอบครบทุกเรื่องที่มีในคลัง ({disciplineCount} ข้อ)
+              </span>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-blue-200" />
+        </button>
+
+        {/* Subtopics from สารบัญวิชาเอก */}
+        <div className="flex flex-col gap-2">
+          {syllabusList.map((topicName, idx) => {
+            const count = majorQuestions.filter(
+              (q) => q.discipline === selectedDiscipline && q.topic === topicName
+            ).length
+            const hasQuestions = count > 0
+
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setSelectedTopic(topicName)
+                  setCurrentStep('configure')
+                }}
+                className={`p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between active:scale-[0.98] ${
+                  hasQuestions
+                    ? 'bg-white hover:bg-blue-50/50 border-slate-200 text-slate-800 shadow-xs'
+                    : 'bg-slate-50/70 border-slate-200/60 text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                  <span
+                    className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${
+                      hasQuestions
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-slate-200 text-slate-500'
+                    }`}
+                  >
+                    {idx + 1}
+                  </span>
+                  <span className="text-xs font-bold leading-snug line-clamp-2">
+                    {topicName.replace(/^\d+\.\s*/, '')}
+                  </span>
+                </div>
+
+                <div className="shrink-0 flex items-center gap-1.5">
+                  {hasQuestions ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      {count} ข้อ
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">
+                      เร็วๆ นี้
+                    </span>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // -------------------------------------------------------------
+  // STEP 4: CONFIGURE (จำนวนข้อ, สุ่ม, เริ่มทำข้อสอบ)
   // -------------------------------------------------------------
   return (
     <div className="max-w-md mx-auto px-4 py-5 pb-28 flex flex-col gap-4 animate-fade-in">
@@ -426,7 +609,11 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           type="button"
           onClick={() => {
             if (selectedSubjectId === 'kb-major') {
-              setCurrentStep('select_major')
+              if (selectedDiscipline !== 'all') {
+                setCurrentStep('select_major_subtopic')
+              } else {
+                setCurrentStep('select_major_discipline')
+              }
             } else {
               setCurrentStep('select_subject')
             }
@@ -434,10 +621,12 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 p-2 rounded-xl bg-white border border-slate-200 shadow-sm active:scale-95 transition-all"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{selectedSubjectId === 'kb-major' ? 'เปลี่ยนหมวดวิชาเอก' : 'เปลี่ยนวิชา'}</span>
+          <span>
+            {selectedSubjectId === 'kb-major' ? 'เปลี่ยนหัวข้อ' : 'เปลี่ยนวิชา'}
+          </span>
         </button>
 
-        <span className="text-xs font-bold text-blue-600">ขั้นตอนสุดท้าย</span>
+        <span className="text-xs font-bold text-blue-600">พร้อมเริ่มฝึก</span>
       </div>
 
       {/* Selected Subject Banner Card */}
@@ -446,18 +635,20 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-0.5">
             วิชาที่พร้อมฝึก
           </span>
-          <h2 className="text-lg font-bold text-slate-800">
+          <h2 className="text-base font-bold text-slate-800">
             {selectedSubjectId === 'all'
               ? 'รวมทุกหมวดวิชา'
+              : selectedSubjectId === 'kb-major'
+              ? `วิชาเอก: ${selectedDiscipline === 'all' ? 'รวมทั้ง 4 หมวด' : selectedDiscipline}`
               : selectedSubjectObj?.name}
           </h2>
-          {selectedSubjectId === 'kb-major' && (
-            <span className="text-xs font-semibold text-purple-700 mt-0.5 block">
-              หมวด: {selectedTopic === 'all' ? 'รวมทั้ง 4 หมวดวิชาเอก' : selectedTopic}
+          {selectedSubjectId === 'kb-major' && selectedTopic !== 'all' && (
+            <span className="text-xs font-semibold text-purple-700 mt-1 block">
+              เรื่อง: {selectedTopic}
             </span>
           )}
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-2xl shadow-sm">
+        <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-2xl shadow-sm shrink-0 ml-2">
           {selectedSubjectId === 'all' ? '📚' : subjectMeta[selectedSubjectId]?.icon || '📖'}
         </div>
       </div>

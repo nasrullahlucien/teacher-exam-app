@@ -8,6 +8,7 @@ export interface Question {
   id: string
   subject: string
   topic: string
+  discipline?: string
   question: string
   choices: string[]
   answer: number // 0-based index
