@@ -4,9 +4,13 @@ let cachedSubjects: Subject[] | null = null
 let cachedChapters: Chapter[] | null = null
 const questionsCache: Record<string, Question[]> = {}
 
+const BASE = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`
+
 export async function fetchSubjects(): Promise<Subject[]> {
   if (cachedSubjects) return cachedSubjects
-  const res = await fetch('/data/subjects.json')
+  const res = await fetch(`${BASE}data/subjects.json`)
   if (!res.ok) throw new Error('ไม่สามารถโหลดข้อมูลวิชาได้')
   cachedSubjects = await res.json()
   return cachedSubjects!
@@ -14,7 +18,7 @@ export async function fetchSubjects(): Promise<Subject[]> {
 
 export async function fetchChapters(): Promise<Chapter[]> {
   if (cachedChapters) return cachedChapters
-  const res = await fetch('/data/chapters.json')
+  const res = await fetch(`${BASE}data/chapters.json`)
   if (!res.ok) throw new Error('ไม่สามารถโหลดข้อมูลบทอ่านได้')
   cachedChapters = await res.json()
   return cachedChapters!
@@ -24,7 +28,7 @@ export async function fetchQuestionsBySubject(subjectId: string): Promise<Questi
   if (questionsCache[subjectId]) {
     return questionsCache[subjectId]
   }
-  const res = await fetch(`/data/questions/${subjectId}.json`)
+  const res = await fetch(`${BASE}data/questions/${subjectId}.json`)
   if (!res.ok) throw new Error(`ไม่สามารถโหลดข้อสอบวิชา ${subjectId} ได้`)
   const data: Question[] = await res.json()
   questionsCache[subjectId] = data
