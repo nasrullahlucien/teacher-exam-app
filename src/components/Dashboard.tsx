@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { BookOpen, AlertCircle, CheckSquare, ChevronRight, Play, Sparkles } from 'lucide-react'
+import { BookOpen, AlertCircle, CheckSquare, ChevronRight, Play, Sparkles, Lock } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import type { Subject, LastPracticeInfo } from '../types'
@@ -308,22 +308,57 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, stats, onPractice, o
   ]
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex flex-col gap-3">
+    <div
+      className={`rounded-2xl p-4 border shadow-sm flex flex-col gap-3 transition-all ${
+        isMajor
+          ? 'bg-gradient-to-br from-purple-50/40 via-white to-indigo-50/30 border-purple-200/90 shadow-md ring-1 ring-purple-300/40'
+          : 'bg-white/80 border-slate-200/70 text-slate-500'
+      }`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-xs font-bold text-slate-800">{subject.name}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className={`text-xs font-bold ${isMajor ? 'text-slate-800' : 'text-slate-700'}`}>
+              {subject.name}
+            </h3>
+            {isMajor ? (
+              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-0.5">
+                <Sparkles className="w-2.5 h-2.5 text-purple-600" /> พร้อมใช้งาน
+              </span>
+            ) : (
+              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-0.5">
+                <Lock className="w-2.5 h-2.5 text-slate-400" /> เร็วๆ นี้
+              </span>
+            )}
+          </div>
           <span className="text-[10px] text-slate-400 block mt-0.5">
-            คลังข้อสอบ: {stats.totalQuestions} ข้อ | ทำแล้ว {stats.totalAttempted} ครั้ง
+            {isMajor
+              ? `คลังข้อสอบ: ${stats.totalQuestions} ข้อ | ทำแล้ว ${stats.totalAttempted} ครั้ง`
+              : `ตัวอย่างข้อสอบ ${stats.totalQuestions} ข้อ • อยู่ระหว่างจัดทำ`}
           </span>
         </div>
 
-        <button
-          onClick={onPractice}
-          className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold active:scale-95 transition-all"
-        >
-          <Play className="w-3 h-3 fill-current" />
-          <span>ฝึกวิชานี้</span>
-        </button>
+        {isMajor ? (
+          <button
+            onClick={onPractice}
+            className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-xs active:scale-95 transition-all"
+          >
+            <Play className="w-3 h-3 fill-current" />
+            <span>ฝึกวิชานี้</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              alert(
+                `🔒 หมวดวิชา "${subject.name}" ยังไม่พร้อมใช้งานสำหรับการฝึกทำจริงครับ (ปัจจุบันมีเพียงข้อสอบตัวอย่าง 10 ข้อ)\n\n✨ แนะนำให้เลือกฝึก "วิชาเอก (วิทยาศาสตร์)" ซึ่งมีข้อสอบพร้อมใช้งานแล้วกว่า 1,350 ข้อก่อนนะครับ!`
+              )
+            }}
+            className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-semibold active:scale-95 transition-all"
+          >
+            <Lock className="w-3 h-3 text-slate-400" />
+            <span>เร็วๆ นี้</span>
+          </button>
+        )}
       </div>
 
       {/* 4 Science Major Subcategories */}

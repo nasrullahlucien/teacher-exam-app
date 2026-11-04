@@ -61,6 +61,15 @@ export const MockExamView: React.FC = () => {
       let pool: Question[] = []
       let title = 'จำลองสอบรวมทุกวิชา'
 
+      if (selectedSubjectId !== 'all' && selectedSubjectId !== 'kb-major') {
+        const subj = subjects.find((s) => s.id === selectedSubjectId)
+        alert(
+          `🔒 หมวดวิชา "${subj?.name || ''}" ยังไม่พร้อมสำหรับการจำลองสอบจริงครับ (ปัจจุบันมีเพียงตัวอย่าง 10 ข้อ)\n\n✨ แนะนำให้เลือก "วิชาเอก (วิทยาศาสตร์)" ซึ่งมีข้อสอบครบถ้วนกว่า 1,350 ข้อพร้อมสอบจับเวลาจริงครับ!`
+        )
+        setIsLoading(false)
+        return
+      }
+
       if (selectedSubjectId === 'all') {
         pool = await fetchAllQuestions()
       } else {
@@ -199,12 +208,12 @@ export const MockExamView: React.FC = () => {
               className="w-full text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">รวมทุกหมวดวิชา (ภาค ก + ภาค ข)</option>
-              <optgroup label="ภาค ก">
+              <optgroup label="ภาค ก (ตัวอย่าง 10 ข้อ - เร็วๆ นี้)">
                 {subjects
                   .filter((s) => s.part === 'ก')
                   .map((s) => (
                     <option key={s.id} value={s.id}>
-                      ภาค ก: {s.name}
+                      🔒 ภาค ก: {s.name} (เร็วๆ นี้)
                     </option>
                   ))}
               </optgroup>
@@ -213,7 +222,7 @@ export const MockExamView: React.FC = () => {
                   .filter((s) => s.part === 'ข')
                   .map((s) => (
                     <option key={s.id} value={s.id}>
-                      ภาค ข: {s.name}
+                      {s.id === 'kb-major' ? '✨ ภาค ข: ' + s.name + ' (พร้อมสอบ 1,358 ข้อ)' : '🔒 ภาค ข: ' + s.name + ' (เร็วๆ นี้)'}
                     </option>
                   ))}
               </optgroup>

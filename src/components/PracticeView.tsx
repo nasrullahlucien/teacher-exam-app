@@ -7,7 +7,9 @@ import {
   Dna,
   Orbit,
   ArrowLeft,
-  ChevronRight
+  ChevronRight,
+  Lock,
+  Sparkles
 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
@@ -132,14 +134,14 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             setMajorQuestions(qList)
           }
         } catch {
-          counts[s.id] = s.id === 'kb-major' ? 811 : 10
+          counts[s.id] = s.id === 'kb-major' ? 1358 : 10
         }
       }
       setSubjectQuestionCounts(counts)
 
       if (initialSubjectId) {
-        setSelectedSubjectId(initialSubjectId)
         if (initialSubjectId === 'kb-major') {
+          setSelectedSubjectId('kb-major')
           if (initialTopic) {
             if (MAJOR_SYLLABUS_TOPICS[initialTopic]) {
               setSelectedDiscipline(initialTopic)
@@ -153,8 +155,11 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             setCurrentStep('select_major_discipline')
           }
         } else {
-          if (initialTopic) setSelectedTopic(initialTopic)
-          setCurrentStep('configure')
+          // Locked subjects (only sample questions)
+          const targetName = subjList.find((s) => s.id === initialSubjectId)?.name || 'นี้'
+          alert(`🔒 หมวดวิชา "${targetName}" ยังไม่พร้อมใช้งานสำหรับการฝึกจริงครับ (ปัจจุบันมีเพียงข้อสอบตัวอย่าง 10 ข้อ)\n\n✨ ระบบได้เปิด "วิชาเอก (วิทยาศาสตร์)" ที่มีข้อสอบพร้อมใช้งาน 1,358 ข้อให้แทนครับ`)
+          setSelectedSubjectId('kb-major')
+          setCurrentStep('select_major_discipline')
         }
         if (onClearInitialSubject) onClearInitialSubject()
       }
@@ -163,7 +168,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   }, [initialSubjectId, initialTopic, onClearInitialSubject])
 
   const getSubjectProgress = (subjectId: string) => {
-    const totalQuestions = subjectQuestionCounts[subjectId] || (subjectId === 'kb-major' ? 811 : 10)
+    const totalQuestions = subjectQuestionCounts[subjectId] || (subjectId === 'kb-major' ? 1358 : 10)
     let totalAttempted = 0
     let totalCorrect = 0
 
@@ -448,6 +453,18 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           <p className="text-xs text-slate-500">แตะวิชาที่ต้องการเพื่อเข้าสู่หน้าทำข้อสอบทันที</p>
         </div>
 
+        {/* Readiness Info Banner */}
+        <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/80 text-amber-900 flex items-start gap-2.5 text-xs shadow-xs">
+          <span className="text-base shrink-0">💡</span>
+          <div className="leading-relaxed">
+            <span className="font-bold">สถานะความพร้อม:</span> ปัจจุบันเปิดให้ฝึกทำจริงเฉพาะ{' '}
+            <span className="font-bold text-purple-800 underline decoration-purple-400">
+              หมวดวิชาเอก วิทยาศาสตร์ (1,358 ข้อ)
+            </span>{' '}
+            ส่วนหมวดวิชาอื่นเป็นข้อสอบตัวอย่าง 10 ข้อและถูกล็อกไว้ก่อน (<span className="font-semibold text-amber-700">เร็วๆ นี้</span>)
+          </div>
+        </div>
+
         {/* Quick Resume Card: ทำต่อจากเดิม */}
         {lastPractice && (
           <div className="p-4 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/20 flex items-center justify-between animate-fade-in">
@@ -517,30 +534,34 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           </button>
         </div>
 
-        {/* All Subjects Quick Option */}
+        {/* All Subjects Quick Option (Locked) */}
         {subjectFilterTab === 'all' && (
           <button
             type="button"
             onClick={() => {
-              setSelectedSubjectId('all')
-              setSelectedDiscipline('all')
-              setSelectedTopic('all')
-              setCurrentStep('configure')
+              alert(
+                '🔒 ขณะนี้หมวดวิชาอื่นๆ ยังอยู่ในช่วงจัดเตรียมข้อสอบฉบับเต็ม (มีเพียงตัวอย่าง 10 ข้อ)\n\n✨ แนะนำให้เลือกฝึก "วิชาเอก (วิทยาศาสตร์)" ซึ่งมีข้อสอบครบถ้วนกว่า 1,350 ข้อพร้อมฝึกทำจริงแล้วครับ'
+              )
             }}
-            className="w-full p-4 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 flex items-center justify-between active:scale-[0.98] transition-all"
+            className="w-full p-4 rounded-3xl bg-slate-100 border border-slate-200/80 text-slate-600 shadow-xs flex items-center justify-between opacity-80 hover:opacity-100 transition-all active:scale-[0.98]"
           >
             <div className="flex items-center gap-3">
-              <span className="text-3xl">📚</span>
+              <span className="text-3xl grayscale opacity-75">📚</span>
               <div className="text-left">
-                <span className="text-sm font-bold block leading-tight">
-                  รวมทุกหมวดวิชา (ภาค ก + ภาค ข)
-                </span>
-                <span className="text-[11px] text-blue-100 block mt-0.5">
-                  คละข้อสอบทุกหมวดเพื่อจำลองความพร้อม
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold block leading-tight text-slate-700">
+                    รวมทุกหมวดวิชา (ภาค ก + ภาค ข)
+                  </span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5" /> เร็วๆ นี้
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400 block mt-0.5">
+                  จะเปิดให้ฝึกรวมเมื่อข้อสอบทุกหมวดพร้อมใช้งาน
                 </span>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-blue-200" />
+            <Lock className="w-5 h-5 text-slate-400" />
           </button>
         )}
 
@@ -556,74 +577,115 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 key={s.id}
                 type="button"
                 onClick={() => {
-                  setSelectedSubjectId(s.id)
-                  setSelectedTopic('all')
                   if (isMajor) {
+                    setSelectedSubjectId(s.id)
+                    setSelectedTopic('all')
                     setCurrentStep('select_major_discipline')
                   } else {
-                    setSelectedDiscipline('all')
-                    setCurrentStep('configure')
+                    alert(
+                      `🔒 หมวดวิชา "${s.name}" ยังไม่พร้อมใช้งานสำหรับการฝึกทำจริงครับ (ปัจจุบันมีเพียงข้อสอบตัวอย่าง 10 ข้อ)\n\n✨ แนะนำให้เลือกฝึก "วิชาเอก (วิทยาศาสตร์)" ซึ่งมีข้อสอบพร้อมใช้งานแล้วกว่า 1,350 ข้อก่อนนะครับ!`
+                    )
                   }
                 }}
-                className={`p-3.5 rounded-3xl border text-left flex flex-col justify-between min-h-[145px] active:scale-[0.97] transition-all relative overflow-hidden bg-white hover:bg-blue-50/40 border-slate-200/90 shadow-sm hover:border-blue-300 ${
-                  isMajor ? 'ring-2 ring-purple-400/40 bg-purple-50/20' : ''
+                className={`p-3.5 rounded-3xl border text-left flex flex-col justify-between min-h-[155px] active:scale-[0.97] transition-all relative overflow-hidden shadow-sm ${
+                  isMajor
+                    ? 'ring-2 ring-purple-500/50 bg-gradient-to-br from-purple-50/50 via-white to-indigo-50/40 border-purple-200 shadow-md hover:shadow-lg hover:border-purple-300'
+                    : 'bg-slate-50/80 border-slate-200/70 text-slate-400 opacity-80 hover:opacity-100 hover:border-slate-300'
                 }`}
               >
                 <div className="flex items-start justify-between w-full">
-                  <span className="text-2xl">{meta.icon}</span>
+                  <span className={`text-2xl ${!isMajor ? 'grayscale opacity-75' : ''}`}>
+                    {meta.icon}
+                  </span>
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      s.part === 'ก'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                        : isMajor
-                        ? 'bg-purple-100 text-purple-800 border border-purple-200 font-extrabold'
-                        : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                      isMajor
+                        ? 'bg-purple-100 text-purple-800 border border-purple-200 font-extrabold shadow-2xs'
+                        : 'bg-slate-100 text-slate-500 border border-slate-200'
                     }`}
                   >
-                    {isMajor ? '4 หมวดย่อย' : `ภาค ${s.part}`}
+                    {isMajor ? (
+                      <>
+                        <Sparkles className="w-2.5 h-2.5 text-purple-600" />
+                        <span>พร้อมฝึกจริง</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-2.5 h-2.5 text-slate-400" />
+                        <span>เร็วๆ นี้</span>
+                      </>
+                    )}
                   </span>
                 </div>
 
                 <div className="mt-2 w-full">
-                  <span className="text-xs font-bold block leading-tight text-slate-800">
+                  <span
+                    className={`text-xs font-bold block leading-tight ${
+                      isMajor ? 'text-slate-800' : 'text-slate-600'
+                    }`}
+                  >
                     {s.name}
                   </span>
                   <span className="text-[10px] text-slate-400 block mt-1 line-clamp-1">
                     {meta.desc}
                   </span>
 
-                  {/* Question count & Progress % */}
+                  {/* Question count & status */}
                   <div className="mt-2 pt-1.5 border-t border-slate-100 flex flex-col gap-1 w-full">
                     <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-slate-500 font-medium">{prog.totalQuestions} ข้อ</span>
                       <span
                         className={
-                          prog.coveragePercent > 0
-                            ? 'text-blue-600 font-bold'
-                            : 'text-slate-400'
+                          isMajor ? 'text-purple-700 font-bold' : 'text-slate-400 font-medium'
                         }
                       >
-                        ทำแล้ว {prog.coveragePercent}%
+                        {isMajor ? `${prog.totalQuestions} ข้อ` : 'ตัวอย่าง 10 ข้อ'}
                       </span>
+                      {isMajor ? (
+                        <span
+                          className={
+                            prog.coveragePercent > 0
+                              ? 'text-blue-600 font-bold'
+                              : 'text-slate-400'
+                          }
+                        >
+                          ทำแล้ว {prog.coveragePercent}%
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-amber-600/90 font-medium bg-amber-50 px-1.5 py-0.5 rounded">
+                          กำลังจัดทำ
+                        </span>
+                      )}
                     </div>
-                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          prog.coveragePercent >= 100
-                            ? 'bg-emerald-500'
-                            : prog.coveragePercent > 0
-                            ? 'bg-blue-500'
-                            : 'bg-slate-200'
-                        }`}
-                        style={{ width: `${prog.coveragePercent}%` }}
-                      />
-                    </div>
+                    {isMajor && (
+                      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            prog.coveragePercent >= 100
+                              ? 'bg-emerald-500'
+                              : prog.coveragePercent > 0
+                              ? 'bg-blue-500'
+                              : 'bg-slate-200'
+                          }`}
+                          style={{ width: `${prog.coveragePercent}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="w-full pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-blue-600">
-                  <span>{isMajor ? 'เลือกหมวด →' : 'เริ่ม →'}</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
+                <div
+                  className={`w-full pt-1.5 mt-1 border-t flex items-center justify-between text-[10px] font-bold ${
+                    isMajor
+                      ? 'border-purple-100 text-purple-700'
+                      : 'border-slate-100 text-slate-400 font-medium'
+                  }`}
+                >
+                  <span>{isMajor ? 'เลือกหมวดวิชาเอก →' : 'ล็อกชั่วคราว'}</span>
+                  {isMajor ? (
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  ) : (
+                    <Lock className="w-3 h-3 text-slate-400" />
+                  )}
                 </div>
               </button>
             )
