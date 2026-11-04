@@ -289,7 +289,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, stats, onPractice, o
                 className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 border border-slate-200/80 text-[11px] font-semibold text-slate-700 hover:text-blue-700 active:scale-95 transition-all"
               >
                 <span>{cat.label}</span>
-                <span className="text-[10px] text-blue-500 font-normal">ฝึก &rarr;</span>
+                <span className="text-[10px] text-blue-500 font-normal">ฝึก →</span>
               </button>
             ))}
           </div>

@@ -397,7 +397,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 </div>
 
                 <div className="w-full pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-blue-600">
-                  <span>{isMajor ? 'เลือกหมวด &rarr;' : 'เริ่ม &rarr;'}</span>
+                  <span>{isMajor ? 'เลือกหมวด →' : 'เริ่ม →'}</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </div>
               </button>
@@ -493,7 +493,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 </div>
 
                 <div className="w-full pt-2 mt-2 border-t border-slate-200/50 flex items-center justify-between text-[10px] font-bold text-slate-700">
-                  <span>ดูหัวข้อย่อย &rarr;</span>
+                  <span>ดูหัวข้อย่อย →</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </div>
               </button>
