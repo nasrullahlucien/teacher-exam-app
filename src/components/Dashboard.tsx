@@ -86,7 +86,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </span>
           <span className="text-xs text-blue-100 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>ครูผู้ช่วย 2567-2568</span>
+            <span>ครูผู้ช่วย 2569-2570</span>
           </span>
         </div>
 
