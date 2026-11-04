@@ -1,30 +1,56 @@
-import React, { useState } from 'react'
-import { ArrowLeft, CheckCircle2, XCircle, ArrowRight, RotateCcw, AlertTriangle, Sparkles, Check } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import {
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+  RotateCcw,
+  AlertTriangle,
+  Sparkles,
+  Check,
+  Shuffle
+} from 'lucide-react'
 import type { Question } from '../types'
 import { recordAnswer, saveExamHistory } from '../db'
 import { MathText } from './MathText'
+import { shuffleQuestionChoices } from '../utils/shuffleChoices'
 
 interface PracticeSessionProps {
   title: string
   questions: Question[]
   onFinish: () => void
   isMistakeMode?: boolean
+  shuffleChoices?: boolean
 }
 
 export const PracticeSession: React.FC<PracticeSessionProps> = ({
   title,
   questions,
   onFinish,
-  isMistakeMode = false
+  isMistakeMode: _isMistakeMode = false,
+  shuffleChoices = true
 }) => {
+  const [sessionQuestions, setSessionQuestions] = useState<Question[]>(() =>
+    shuffleChoices ? questions.map(shuffleQuestionChoices) : questions
+  )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
-  const [answerFeedback, setAnswerFeedback] = useState<Record<number, { removedFromMistakes: boolean; currentConsecutive: number }>>({})
+  const [answerFeedback, setAnswerFeedback] = useState<
+    Record<number, { removedFromMistakes: boolean; currentConsecutive: number }>
+  >({})
   const [startTime] = useState<number>(Date.now())
   const [isCompleted, setIsCompleted] = useState(false)
   const [timeSpent, setTimeSpent] = useState(0)
 
-  const currentQ = questions[currentIndex]
+  useEffect(() => {
+    setSessionQuestions(shuffleChoices ? questions.map(shuffleQuestionChoices) : questions)
+    setCurrentIndex(0)
+    setSelectedAnswers({})
+    setAnswerFeedback({})
+    setIsCompleted(false)
+  }, [questions, shuffleChoices])
+
+  const currentQ = sessionQuestions[currentIndex]
   const currentSelected = selectedAnswers[currentIndex]
   const isAnswered = currentSelected !== undefined
 
@@ -39,11 +65,11 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
     setSelectedAnswers(updatedAnswers)
 
     const feedback = await recordAnswer(currentQ, isCorrect)
-    setAnswerFeedback(prev => ({ ...prev, [currentIndex]: feedback }))
+    setAnswerFeedback((prev) => ({ ...prev, [currentIndex]: feedback }))
   }
 
   const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
+    if (currentIndex < sessionQuestions.length - 1) {
       setCurrentIndex(currentIndex + 1)
     } else {
       finishQuiz()
@@ -56,15 +82,17 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
 
     // Calculate score
     let score = 0
-    questions.forEach((q, idx) => {
+    sessionQuestions.forEach((q, idx) => {
       if (selectedAnswers[idx] === q.answer) {
         score += 1
       }
     })
 
-    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0
+    const percentage =
+      sessionQuestions.length > 0 ? Math.round((score / sessionQuestions.length) * 100) : 0
 
-    const details = questions.map((q, idx) => ({
+    // Build question detail records for history
+    const details = sessionQuestions.map((q, idx) => ({
       questionId: q.id,
       subjectId: q.subject,
       topic: q.topic,
@@ -74,49 +102,57 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
     }))
 
     // Save exam history
-    await saveExamHistory({
-      mode: isMistakeMode ? 'mock' : 'practice',
-      subjectId: questions[0]?.subject || 'general',
-      score,
-      totalQuestions: questions.length,
-      percentage,
-      timeSpentSeconds: elapsedSeconds,
-      date: new Date().toISOString(),
-      details
-    })
+    try {
+      await saveExamHistory({
+        mode: 'practice',
+        subjectId: sessionQuestions[0]?.subject || 'general',
+        score,
+        totalQuestions: sessionQuestions.length,
+        percentage,
+        timeSpentSeconds: elapsedSeconds,
+        date: new Date().toISOString(),
+        details
+      })
+    } catch (err) {
+      console.error('Failed to save exam history', err)
+    }
 
     setIsCompleted(true)
   }
 
-  // Calculate score summary
-  const score = Object.entries(selectedAnswers).reduce((acc, [idxStr, ans]) => {
-    const q = questions[Number(idxStr)]
-    return ans === q?.answer ? acc + 1 : acc
-  }, 0)
-
-  const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0
-
+  // Summary Screen when completed
   if (isCompleted) {
-    const wrongQuestions = questions.filter((q, idx) => selectedAnswers[idx] !== q.answer)
+    let score = 0
+    Object.keys(selectedAnswers).forEach((idxStr) => {
+      const q = sessionQuestions[Number(idxStr)]
+      if (q && selectedAnswers[Number(idxStr)] === q.answer) {
+        score += 1
+      }
+    })
+    const percentage =
+      sessionQuestions.length > 0 ? Math.round((score / sessionQuestions.length) * 100) : 0
+    const isPassed = percentage >= 60
+
+    const wrongQuestions = sessionQuestions.filter(
+      (q, idx) => selectedAnswers[idx] !== q.answer
+    )
 
     return (
-      <div className="max-w-md mx-auto px-4 py-6 pb-24 flex flex-col gap-5 animate-fade-in">
+      <div className="max-w-md mx-auto px-4 py-5 pb-24 flex flex-col gap-4 animate-fade-in">
         {/* Result Header Card */}
-        <div className="bg-white rounded-2xl p-6 text-center border border-slate-200/80 shadow-sm flex flex-col items-center">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-3 ${
-            percentage >= 60 ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
-          }`}>
-            <Sparkles className="w-8 h-8" />
+        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-2 bg-blue-50 text-blue-600">
+            {isPassed ? '🎉' : '💪'}
           </div>
 
-          <h2 className="text-xl font-bold text-slate-800">
-            {percentage >= 60 ? 'ทำได้ยอดเยี่ยม!' : 'พยายามได้ดีมาก!'}
+          <h2 className="text-lg font-bold text-slate-800">
+            {isPassed ? 'ผ่านเกณฑ์การฝึกฝน!' : 'ฝึกฝนเสร็จสิ้น!'}
           </h2>
-          <p className="text-xs text-slate-500 mt-1">สรุปผลการฝึกทำข้อสอบ: {title}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{title}</p>
 
-          <div className="my-4 flex items-baseline gap-1.5">
-            <span className="text-4xl font-extrabold text-blue-600">{score}</span>
-            <span className="text-lg font-bold text-slate-400">/ {questions.length}</span>
+          <div className="my-3 flex items-baseline justify-center">
+            <span className="text-4xl font-extrabold text-slate-900">{score}</span>
+            <span className="text-lg font-bold text-slate-400">/ {sessionQuestions.length}</span>
             <span className="ml-2 text-sm font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700">
               {percentage}%
             </span>
@@ -144,7 +180,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
           </h3>
 
           <div className="flex flex-col gap-2.5">
-            {questions.map((q, idx) => {
+            {sessionQuestions.map((q, idx) => {
               const isCorrect = selectedAnswers[idx] === q.answer
               return (
                 <div
@@ -167,7 +203,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
                       ข้อ {idx + 1}. <MathText text={q.question} />
                     </p>
                     <div className="mt-1 flex items-center gap-2 text-[11px]">
-                      <span className="text-slate-500">ตอบ: {choiceLabels[selectedAnswers[idx] ?? 0]}</span>
+                      <span className="text-slate-500">
+                        ตอบ: {choiceLabels[selectedAnswers[idx] ?? 0]}
+                      </span>
                       {!isCorrect && (
                         <span className="text-emerald-700 font-semibold">
                           (เฉลย: {choiceLabels[q.answer]})
@@ -189,11 +227,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
               setSelectedAnswers({})
               setAnswerFeedback({})
               setIsCompleted(false)
+              if (shuffleChoices) {
+                setSessionQuestions(questions.map(shuffleQuestionChoices))
+              }
             }}
             className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition-all active:scale-[0.98]"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>ทำชุดนี้อีกรอบ</span>
+            <span>ทำชุดนี้อีกรอบ (สลับช้อยใหม่)</span>
           </button>
 
           <button
@@ -217,22 +258,29 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
       <div className="flex items-center justify-between">
         <button
           onClick={onFinish}
-          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-all"
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>ออก</span>
         </button>
 
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-          ข้อที่ {currentIndex + 1} / {questions.length}
-        </span>
+        <div className="flex items-center gap-2">
+          {shuffleChoices && (
+            <span className="text-[10px] font-medium text-purple-700 bg-purple-50 border border-purple-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Shuffle className="w-2.5 h-2.5" /> สลับช้อย
+            </span>
+          )}
+          <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">
+            ข้อที่ {currentIndex + 1} / {sessionQuestions.length}
+          </span>
+        </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-blue-600 rounded-full transition-all duration-300"
-          style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+          className="h-full bg-blue-600 transition-all duration-300 rounded-full"
+          style={{ width: `${((currentIndex + 1) / sessionQuestions.length) * 100}%` }}
         />
       </div>
 
@@ -260,7 +308,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
           const isThisChoice = currentSelected === idx
           const isCorrectChoice = idx === currentQ.answer
 
-          let choiceStyle = 'border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50/80'
+          let choiceStyle =
+            'border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50/80'
 
           if (isAnswered) {
             if (isCorrectChoice) {
@@ -309,23 +358,29 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
           {!isCurrentCorrect && (
             <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>บันทึกข้อนี้เข้า <b>สมุดข้อผิด</b> อัตโนมัติแล้ว (ทบทวนได้ที่แท็บสมุดข้อผิด)</span>
+              <span>
+                บันทึกข้อนี้เข้า <b>สมุดข้อผิด</b> อัตโนมัติแล้ว (ทบทวนได้ที่แท็บสมุดข้อผิด)
+              </span>
             </div>
           )}
 
           {isCurrentCorrect && feedback?.removedFromMistakes && (
             <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>🎉 ยอดเยี่ยม! คุณตอบถูก 2 ครั้งติด ข้อนี้จึงถูก<b>ปลดออกจากสมุดข้อผิดแล้ว</b></span>
+              <span>
+                🎉 ยอดเยี่ยม! คุณตอบถูก 2 ครั้งติด ข้อนี้จึงถูก<b>ปลดออกจากสมุดข้อผิดแล้ว</b>
+              </span>
             </div>
           )}
 
-          {isCurrentCorrect && !feedback?.removedFromMistakes && feedback?.currentConsecutive === 1 && (
-            <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-              <span>ตอบถูกแล้ว 1 ครั้ง (ตอบถูกอีก 1 ครั้งติด ข้อนี้จะออกจากสมุดข้อผิด)</span>
-            </div>
-          )}
+          {isCurrentCorrect &&
+            !feedback?.removedFromMistakes &&
+            feedback?.currentConsecutive === 1 && (
+              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>ตอบถูกแล้ว 1 ครั้ง (ตอบถูกอีก 1 ครั้งติด ข้อนี้จะออกจากสมุดข้อผิด)</span>
+              </div>
+            )}
 
           {/* Explanation Card */}
           <div className="bg-slate-100/80 rounded-2xl p-4 border border-slate-200/80 text-xs text-slate-700">
@@ -343,7 +398,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
             onClick={handleNext}
             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
           >
-            <span>{currentIndex < questions.length - 1 ? 'ข้อถัดไป' : 'ดูสรุปคะแนน'}</span>
+            <span>
+              {currentIndex < sessionQuestions.length - 1 ? 'ข้อถัดไป' : 'ดูสรุปคะแนน'}
+            </span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

@@ -105,11 +105,13 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   const [majorQuestions, setMajorQuestions] = useState<Question[]>([])
   const [questionCount, setQuestionCount] = useState<number>(10)
   const [isShuffle, setIsShuffle] = useState<boolean>(true)
+  const [isShuffleChoices, setIsShuffleChoices] = useState<boolean>(true)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [subjectFilterTab, setSubjectFilterTab] = useState<'all' | 'ก' | 'ข'>('all')
   const [activeSession, setActiveSession] = useState<{
     title: string
     questions: Question[]
+    isShuffleChoices?: boolean
   } | null>(null)
 
   const examHistory = useLiveQuery(() => db.examHistory.toArray(), [])
@@ -279,7 +281,8 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
 
       setActiveSession({
         title,
-        questions: prepared
+        questions: prepared,
+        isShuffleChoices: saved.isShuffleChoices !== false
       })
     } catch (err) {
       console.error(err)
@@ -349,6 +352,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         topic: selectedTopic,
         questionCount,
         isShuffle,
+        isShuffleChoices,
         timestamp: new Date().toISOString()
       }
       try {
@@ -358,7 +362,8 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
 
       setActiveSession({
         title,
-        questions: prepared
+        questions: prepared,
+        isShuffleChoices
       })
     } catch (err) {
       console.error(err)
@@ -373,6 +378,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       <PracticeSession
         title={activeSession.title}
         questions={activeSession.questions}
+        shuffleChoices={activeSession.isShuffleChoices !== false}
         onFinish={() => {
           setActiveSession(null)
           setCurrentStep('select_subject')
@@ -1011,12 +1017,12 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       {/* Shuffle Setting */}
       <div className="bg-white rounded-3xl p-4 px-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600">
+          <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
             <Shuffle className="w-4 h-4" />
           </div>
           <div>
             <span className="text-xs font-bold text-slate-800 block">สุ่มลำดับข้อสอบ</span>
-            <span className="text-[10px] text-slate-400 block">สลับข้อไม่ให้จำตำแหน่งเดิม</span>
+            <span className="text-[10px] text-slate-400 block">สลับข้อไม่ให้จำลำดับเดิม</span>
           </div>
         </div>
 
@@ -1025,6 +1031,29 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           onClick={() => setIsShuffle(!isShuffle)}
           className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
             isShuffle ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
+          }`}
+        >
+          <div className="w-4 h-4 rounded-full bg-white shadow-md transition-transform" />
+        </button>
+      </div>
+
+      {/* Shuffle Choices Setting */}
+      <div className="bg-white rounded-3xl p-4 px-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+            <Shuffle className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-slate-800 block">สลับตำแหน่งตัวเลือก (ช้อย)</span>
+            <span className="text-[10px] text-slate-400 block">สุ่มตำแหน่ง ก-ง เพื่อป้องกันการจำตำแหน่ง</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsShuffleChoices(!isShuffleChoices)}
+          className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
+            isShuffleChoices ? 'bg-purple-600 justify-end' : 'bg-slate-200 justify-start'
           }`}
         >
           <div className="w-4 h-4 rounded-full bg-white shadow-md transition-transform" />

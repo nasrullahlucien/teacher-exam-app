@@ -89,5 +89,6 @@ export interface LastPracticeInfo {
   topic: string
   questionCount: number
   isShuffle: boolean
+  isShuffleChoices?: boolean
   timestamp: string
 }
