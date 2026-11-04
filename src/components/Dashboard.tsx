@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { BookOpen, AlertCircle, CheckSquare, ChevronRight, Play, Sparkles } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
-import type { Subject } from '../types'
+import type { Subject, LastPracticeInfo } from '../types'
 import { fetchSubjects, fetchQuestionsBySubject } from '../services/dataLoader'
 import type { NavTab } from './BottomNav'
 
@@ -13,11 +13,19 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [subjectQuestionCounts, setSubjectQuestionCounts] = useState<Record<string, number>>({})
+  const [lastPractice, setLastPractice] = useState<LastPracticeInfo | null>(null)
 
   // Live queries from Dexie
   const mistakes = useLiveQuery(() => db.mistakes.toArray(), [])
   const examHistory = useLiveQuery(() => db.examHistory.toArray(), [])
   const readingList = useLiveQuery(() => db.readingChecklist.toArray(), [])
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('teacher_exam_last_practice')
+      if (saved) setLastPractice(JSON.parse(saved))
+    } catch {}
+  }, [])
 
   useEffect(() => {
     fetchSubjects().then(async (subjList) => {
@@ -146,6 +154,48 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <span className="text-[10px] text-slate-400 font-medium">บทที่อ่านจบ</span>
         </button>
       </div>
+
+      {/* Quick Action: ทำต่อจากเดิม */}
+      {lastPractice && (
+        <div className="bg-white border border-blue-200/90 rounded-3xl p-3.5 shadow-xs flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-3 min-w-0 pr-2">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+              ⚡
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">
+                  ทำต่อจากเดิม
+                </span>
+                <span className="text-[10px] text-slate-400 truncate">
+                  {lastPractice.discipline !== 'all' ? lastPractice.discipline : lastPractice.subjectName}
+                </span>
+              </div>
+              <h4 className="text-xs font-bold text-slate-800 truncate">
+                {lastPractice.topic !== 'all' ? lastPractice.topic : 'รวมทุกหัวข้อ'}
+              </h4>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              onNavigate(
+                'practice',
+                lastPractice.subjectId,
+                lastPractice.discipline !== 'all'
+                  ? lastPractice.discipline
+                  : lastPractice.topic !== 'all'
+                  ? lastPractice.topic
+                  : undefined
+              )
+            }
+            className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            <Play className="w-3 h-3 fill-current" />
+            <span>ฝึกต่อ</span>
+          </button>
+        </div>
+      )}
 
       {/* Quick Action: Mock Exam Banner */}
       <button

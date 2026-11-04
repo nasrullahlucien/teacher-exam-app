@@ -63,6 +63,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
 
     const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0
 
+    const details = questions.map((q, idx) => ({
+      questionId: q.id,
+      subjectId: q.subject,
+      topic: q.topic,
+      userAnswer: selectedAnswers[idx] ?? null,
+      correctAnswer: q.answer,
+      isCorrect: selectedAnswers[idx] === q.answer
+    }))
+
     // Save exam history
     await saveExamHistory({
       mode: isMistakeMode ? 'mock' : 'practice',
@@ -71,7 +80,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
       totalQuestions: questions.length,
       percentage,
       timeSpentSeconds: elapsedSeconds,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      details
     })
 
     setIsCompleted(true)

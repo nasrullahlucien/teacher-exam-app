@@ -9,7 +9,9 @@ import {
   ArrowLeft,
   ChevronRight
 } from 'lucide-react'
-import type { Subject, Question } from '../types'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db'
+import type { Subject, Question, LastPracticeInfo } from '../types'
 import { fetchSubjects, fetchQuestionsBySubject, fetchAllQuestions } from '../services/dataLoader'
 import { PracticeSession } from './PracticeSession'
 
@@ -92,6 +94,8 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   onClearInitialSubject
 }) => {
   const [subjects, setSubjects] = useState<Subject[]>([])
+  const [subjectQuestionCounts, setSubjectQuestionCounts] = useState<Record<string, number>>({})
+  const [lastPractice, setLastPractice] = useState<LastPracticeInfo | null>(null)
   const [currentStep, setCurrentStep] = useState<Step>('select_subject')
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('all')
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all')
@@ -106,37 +110,179 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
     questions: Question[]
   } | null>(null)
 
-  useEffect(() => {
-    Promise.all([fetchSubjects(), fetchQuestionsBySubject('kb-major').catch(() => [])]).then(
-      ([resSubj, resMajor]) => {
-        setSubjects(resSubj)
-        setMajorQuestions(resMajor)
+  const examHistory = useLiveQuery(() => db.examHistory.toArray(), [])
 
-        if (initialSubjectId) {
-          setSelectedSubjectId(initialSubjectId)
-          if (initialSubjectId === 'kb-major') {
-            if (initialTopic) {
-              if (MAJOR_SYLLABUS_TOPICS[initialTopic]) {
-                setSelectedDiscipline(initialTopic)
-                setSelectedTopic('all')
-                setCurrentStep('select_major_subtopic')
-              } else {
-                setSelectedTopic(initialTopic)
-                setCurrentStep('configure')
-              }
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('teacher_exam_last_practice')
+      if (saved) {
+        setLastPractice(JSON.parse(saved))
+      }
+    } catch {}
+
+    fetchSubjects().then(async (subjList) => {
+      setSubjects(subjList)
+      const counts: Record<string, number> = {}
+
+      for (const s of subjList) {
+        try {
+          const qList = await fetchQuestionsBySubject(s.id)
+          counts[s.id] = qList.length
+          if (s.id === 'kb-major') {
+            setMajorQuestions(qList)
+          }
+        } catch {
+          counts[s.id] = s.id === 'kb-major' ? 811 : 10
+        }
+      }
+      setSubjectQuestionCounts(counts)
+
+      if (initialSubjectId) {
+        setSelectedSubjectId(initialSubjectId)
+        if (initialSubjectId === 'kb-major') {
+          if (initialTopic) {
+            if (MAJOR_SYLLABUS_TOPICS[initialTopic]) {
+              setSelectedDiscipline(initialTopic)
+              setSelectedTopic('all')
+              setCurrentStep('select_major_subtopic')
             } else {
-              setCurrentStep('select_major_discipline')
+              setSelectedTopic(initialTopic)
+              setCurrentStep('configure')
             }
           } else {
-            if (initialTopic) setSelectedTopic(initialTopic)
-            setCurrentStep('configure')
+            setCurrentStep('select_major_discipline')
           }
-          if (onClearInitialSubject) onClearInitialSubject()
+        } else {
+          if (initialTopic) setSelectedTopic(initialTopic)
+          setCurrentStep('configure')
         }
-        setIsLoading(false)
+        if (onClearInitialSubject) onClearInitialSubject()
       }
-    )
+      setIsLoading(false)
+    })
   }, [initialSubjectId, initialTopic, onClearInitialSubject])
+
+  const getSubjectProgress = (subjectId: string) => {
+    const totalQuestions = subjectQuestionCounts[subjectId] || (subjectId === 'kb-major' ? 811 : 10)
+    let totalAttempted = 0
+    let totalCorrect = 0
+
+    ;(examHistory || []).forEach((h) => {
+      if (h.subjectId === subjectId) {
+        totalAttempted += h.totalQuestions
+        totalCorrect += h.score
+      } else if (h.subjectBreakdown && h.subjectBreakdown[subjectId]) {
+        totalAttempted += h.subjectBreakdown[subjectId].total
+        totalCorrect += h.subjectBreakdown[subjectId].correct
+      } else if (h.details && h.details.length > 0) {
+        const matches = h.details.filter((d) => d.subjectId === subjectId)
+        totalAttempted += matches.length
+        totalCorrect += matches.filter((d) => d.isCorrect).length
+      }
+    })
+
+    const coveragePercent = Math.min(100, Math.round((totalAttempted / totalQuestions) * 100))
+    const avgScore = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0
+
+    return { totalQuestions, totalAttempted, coveragePercent, avgScore }
+  }
+
+  const getDisciplineStats = (disciplineId: string) => {
+    const disciplineQIds = new Set(
+      majorQuestions.filter((q) => q.discipline === disciplineId).map((q) => q.id)
+    )
+
+    let attempted = 0
+    let correct = 0
+
+    ;(examHistory || []).forEach((h) => {
+      if (h.details && h.details.length > 0) {
+        h.details.forEach((d) => {
+          if (disciplineQIds.has(d.questionId)) {
+            attempted++
+            if (d.isCorrect) correct++
+          }
+        })
+      }
+    })
+
+    if (attempted === 0) {
+      return {
+        isStarted: false,
+        statusText: 'ยังไม่เริ่ม',
+        avgScore: 0,
+        attempted: 0
+      }
+    }
+
+    const avg = Math.round((correct / attempted) * 100)
+    return {
+      isStarted: true,
+      statusText: `เฉลี่ย ${avg}%`,
+      avgScore: avg,
+      attempted
+    }
+  }
+
+  const handleResumePractice = async (saved: LastPracticeInfo) => {
+    setIsLoading(true)
+    try {
+      let pool: Question[] = []
+      let title = saved.subjectName
+
+      if (saved.subjectId === 'all') {
+        pool = await fetchAllQuestions()
+        title = 'ฝึกทำข้อสอบรวมทุกวิชา'
+      } else if (saved.subjectId === 'kb-major') {
+        pool = await fetchQuestionsBySubject('kb-major')
+        title = 'วิชาเอก (วิทยาศาสตร์)'
+
+        if (saved.discipline && saved.discipline !== 'all') {
+          pool = pool.filter((q) => q.discipline === saved.discipline)
+          title = `${saved.discipline}`
+        }
+
+        if (saved.topic && saved.topic !== 'all') {
+          pool = pool.filter((q) => isMatchingTopic(q.topic, saved.topic))
+          title = `${title} • ${saved.topic}`
+        }
+      } else {
+        pool = await fetchQuestionsBySubject(saved.subjectId)
+        title = saved.subjectName
+
+        if (saved.topic && saved.topic !== 'all') {
+          pool = pool.filter((q) => isMatchingTopic(q.topic, saved.topic))
+          title = `${title} (${saved.topic})`
+        }
+      }
+
+      if (pool.length === 0) {
+        alert('ยังไม่มีข้อสอบในหัวข้อนี้ กำลังทยอยเพิ่มข้อสอบเร็วๆ นี้ครับ')
+        setIsLoading(false)
+        return
+      }
+
+      let prepared = [...pool]
+      if (saved.isShuffle) {
+        prepared.sort(() => Math.random() - 0.5)
+      }
+
+      const count = saved.questionCount || 10
+      if (count > 0 && count < prepared.length) {
+        prepared = prepared.slice(0, count)
+      }
+
+      setActiveSession({
+        title,
+        questions: prepared
+      })
+    } catch (err) {
+      console.error(err)
+      alert('เกิดข้อผิดพลาดในการโหลดข้อสอบ')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleStartPractice = async () => {
     setIsLoading(true)
@@ -186,6 +332,24 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       if (questionCount > 0 && questionCount < prepared.length) {
         prepared = prepared.slice(0, questionCount)
       }
+
+      // Save last practice session for quick continue
+      const practiceInfo: LastPracticeInfo = {
+        subjectId: selectedSubjectId,
+        subjectName:
+          selectedSubjectId === 'all'
+            ? 'รวมทุกวิชา'
+            : subjects.find((s) => s.id === selectedSubjectId)?.name || 'วิชาเอก (วิทยาศาสตร์)',
+        discipline: selectedDiscipline,
+        topic: selectedTopic,
+        questionCount,
+        isShuffle,
+        timestamp: new Date().toISOString()
+      }
+      try {
+        localStorage.setItem('teacher_exam_last_practice', JSON.stringify(practiceInfo))
+        setLastPractice(practiceInfo)
+      } catch {}
 
       setActiveSession({
         title,
@@ -284,6 +448,38 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           <p className="text-xs text-slate-500">แตะวิชาที่ต้องการเพื่อเข้าสู่หน้าทำข้อสอบทันที</p>
         </div>
 
+        {/* Quick Resume Card: ทำต่อจากเดิม */}
+        {lastPractice && (
+          <div className="p-4 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/20 flex items-center justify-between animate-fade-in">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0">
+                ⚡
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 text-blue-100">
+                    ทำต่อจากเดิม
+                  </span>
+                  <span className="text-[10px] text-blue-200 truncate">
+                    {lastPractice.discipline !== 'all' ? lastPractice.discipline : lastPractice.subjectName}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold truncate leading-tight">
+                  {lastPractice.topic !== 'all' ? lastPractice.topic : 'รวมทุกหัวข้อ'}
+                </h3>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleResumePractice(lastPractice)}
+              className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white text-blue-700 font-bold text-xs shadow-sm hover:bg-blue-50 active:scale-95 transition-all"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>ทำต่อ</span>
+            </button>
+          </div>
+        )}
+
         {/* Part Filter Tabs */}
         <div className="flex items-center bg-slate-200/70 p-1 rounded-2xl text-xs font-semibold">
           <button
@@ -353,6 +549,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           {filteredSubjects.map((s) => {
             const meta = subjectMeta[s.id] || { icon: '📖', desc: '' }
             const isMajor = s.id === 'kb-major'
+            const prog = getSubjectProgress(s.id)
 
             return (
               <button
@@ -368,7 +565,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                     setCurrentStep('configure')
                   }
                 }}
-                className={`p-3.5 rounded-3xl border text-left flex flex-col justify-between min-h-[115px] active:scale-[0.97] transition-all relative overflow-hidden bg-white hover:bg-blue-50/40 border-slate-200/90 shadow-sm hover:border-blue-300 ${
+                className={`p-3.5 rounded-3xl border text-left flex flex-col justify-between min-h-[145px] active:scale-[0.97] transition-all relative overflow-hidden bg-white hover:bg-blue-50/40 border-slate-200/90 shadow-sm hover:border-blue-300 ${
                   isMajor ? 'ring-2 ring-purple-400/40 bg-purple-50/20' : ''
                 }`}
               >
@@ -387,13 +584,41 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                   </span>
                 </div>
 
-                <div className="mt-2">
+                <div className="mt-2 w-full">
                   <span className="text-xs font-bold block leading-tight text-slate-800">
                     {s.name}
                   </span>
                   <span className="text-[10px] text-slate-400 block mt-1 line-clamp-1">
                     {meta.desc}
                   </span>
+
+                  {/* Question count & Progress % */}
+                  <div className="mt-2 pt-1.5 border-t border-slate-100 flex flex-col gap-1 w-full">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-500 font-medium">{prog.totalQuestions} ข้อ</span>
+                      <span
+                        className={
+                          prog.coveragePercent > 0
+                            ? 'text-blue-600 font-bold'
+                            : 'text-slate-400'
+                        }
+                      >
+                        ทำแล้ว {prog.coveragePercent}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          prog.coveragePercent >= 100
+                            ? 'bg-emerald-500'
+                            : prog.coveragePercent > 0
+                            ? 'bg-blue-500'
+                            : 'bg-slate-200'
+                        }`}
+                        style={{ width: `${prog.coveragePercent}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="w-full pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-blue-600">
@@ -464,6 +689,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           {majorDisciplines.map((item) => {
             const Icon = item.icon
             const count = majorQuestions.filter((q) => q.discipline === item.id).length
+            const discStats = getDisciplineStats(item.id)
 
             return (
               <button
@@ -474,7 +700,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                   setSelectedTopic('all')
                   setCurrentStep('select_major_subtopic')
                 }}
-                className={`p-4 rounded-3xl border text-left transition-all flex flex-col justify-between min-h-[140px] active:scale-[0.97] relative shadow-sm ${item.color}`}
+                className={`p-4 rounded-3xl border text-left transition-all flex flex-col justify-between min-h-[160px] active:scale-[0.97] relative shadow-sm ${item.color}`}
               >
                 <div className="flex items-start justify-between w-full">
                   <div className={`w-9 h-9 rounded-2xl flex items-center justify-center ${item.iconBg}`}>
@@ -490,6 +716,20 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                   <p className="text-[10px] mt-1 text-slate-500 leading-snug line-clamp-2">
                     {item.sub}
                   </p>
+
+                  {/* Discipline Status Badge */}
+                  <div className="mt-2.5 flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-400 font-medium">สถานะ:</span>
+                    {discStats.isStarted ? (
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200 shadow-2xs">
+                        เฉลี่ย {discStats.avgScore}% ({discStats.attempted} ข้อ)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200/60">
+                        ยังไม่เริ่ม
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="w-full pt-2 mt-2 border-t border-slate-200/50 flex items-center justify-between text-[10px] font-bold text-slate-700">

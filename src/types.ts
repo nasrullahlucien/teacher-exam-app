@@ -81,3 +81,13 @@ export interface QuestionAnswerState {
   selectedIndex: number | null
   isSubmitted: boolean
 }
+
+export interface LastPracticeInfo {
+  subjectId: string
+  subjectName: string
+  discipline: string
+  topic: string
+  questionCount: number
+  isShuffle: boolean
+  timestamp: string
+}
