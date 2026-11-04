@@ -134,7 +134,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             setMajorQuestions(qList)
           }
         } catch {
-          counts[s.id] = s.id === 'kb-major' ? 1358 : 10
+          counts[s.id] = s.id === 'kb-major' ? 1742 : 10
         }
       }
       setSubjectQuestionCounts(counts)
@@ -157,7 +157,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         } else {
           // Locked subjects (only sample questions)
           const targetName = subjList.find((s) => s.id === initialSubjectId)?.name || 'นี้'
-          alert(`🔒 หมวดวิชา "${targetName}" ยังไม่พร้อมใช้งานสำหรับการฝึกจริงครับ (ปัจจุบันมีเพียงข้อสอบตัวอย่าง 10 ข้อ)\n\n✨ ระบบได้เปิด "วิชาเอก (วิทยาศาสตร์)" ที่มีข้อสอบพร้อมใช้งาน 1,358 ข้อให้แทนครับ`)
+          alert(`🔒 หมวดวิชา "${targetName}" ยังไม่พร้อมใช้งานสำหรับการฝึกจริงครับ (ปัจจุบันมีเพียงข้อสอบตัวอย่าง 10 ข้อ)\n\n✨ ระบบได้เปิด "วิชาเอก (วิทยาศาสตร์)" ที่มีข้อสอบพร้อมใช้งาน 1,742 ข้อให้แทนครับ`)
           setSelectedSubjectId('kb-major')
           setCurrentStep('select_major_discipline')
         }
@@ -168,7 +168,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   }, [initialSubjectId, initialTopic, onClearInitialSubject])
 
   const getSubjectProgress = (subjectId: string) => {
-    const totalQuestions = subjectQuestionCounts[subjectId] || (subjectId === 'kb-major' ? 1358 : 10)
+    const totalQuestions = subjectQuestionCounts[subjectId] || (subjectId === 'kb-major' ? 1742 : 10)
     let totalAttempted = 0
     let totalCorrect = 0
 
@@ -459,7 +459,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           <div className="leading-relaxed">
             <span className="font-bold">สถานะความพร้อม:</span> ปัจจุบันเปิดให้ฝึกทำจริงเฉพาะ{' '}
             <span className="font-bold text-purple-800 underline decoration-purple-400">
-              หมวดวิชาเอก วิทยาศาสตร์ (1,358 ข้อ)
+              หมวดวิชาเอก วิทยาศาสตร์ (1,742 ข้อ)
             </span>{' '}
             ส่วนหมวดวิชาอื่นเป็นข้อสอบตัวอย่าง 10 ข้อและถูกล็อกไว้ก่อน (<span className="font-semibold text-amber-700">เร็วๆ นี้</span>)
           </div>

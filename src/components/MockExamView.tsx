@@ -222,7 +222,7 @@ export const MockExamView: React.FC = () => {
                   .filter((s) => s.part === 'ข')
                   .map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.id === 'kb-major' ? '✨ ภาค ข: ' + s.name + ' (พร้อมสอบ 1,358 ข้อ)' : '🔒 ภาค ข: ' + s.name + ' (เร็วๆ นี้)'}
+                      {s.id === 'kb-major' ? '✨ ภาค ข: ' + s.name + ' (พร้อมสอบ 1,742 ข้อ)' : '🔒 ภาค ข: ' + s.name + ' (เร็วๆ นี้)'}
                     </option>
                   ))}
               </optgroup>
