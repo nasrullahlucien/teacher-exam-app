@@ -15,6 +15,7 @@ import {
 import type { Question, Subject, ExamQuestionDetail } from '../types'
 import { recordAnswer, saveExamHistory } from '../db'
 import { fetchSubjects } from '../services/dataLoader'
+import { MathText } from './MathText'
 
 interface MockExamSessionProps {
   title: string
@@ -300,7 +301,9 @@ export const MockExamSession: React.FC<MockExamSessionProps> = ({
                     </div>
                   </div>
 
-                  <p className="font-medium text-slate-800 leading-snug">{q.question}</p>
+                  <p className="font-medium text-slate-800 leading-snug">
+                    <MathText text={q.question} />
+                  </p>
 
                   <div className="flex items-center gap-3 text-[11px] pt-1">
                     <span className="text-slate-600">
@@ -315,7 +318,7 @@ export const MockExamSession: React.FC<MockExamSessionProps> = ({
 
                   <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/60 text-[11px] text-slate-600 leading-relaxed">
                     <span className="font-bold text-slate-700 block mb-0.5">คำอธิบาย:</span>
-                    {q.explanation}
+                    <MathText text={q.explanation} />
                   </div>
                 </div>
               )
@@ -417,7 +420,7 @@ export const MockExamSession: React.FC<MockExamSessionProps> = ({
         </div>
 
         <p className="text-base font-semibold text-slate-800 leading-relaxed whitespace-pre-line pt-1">
-          ข้อ {currentIndex + 1}. {currentQ.question}
+          ข้อ {currentIndex + 1}. <MathText text={currentQ.question} />
         </p>
       </div>
 
@@ -444,7 +447,9 @@ export const MockExamSession: React.FC<MockExamSessionProps> = ({
               >
                 {choiceLabels[idx]}
               </div>
-              <span className="text-sm leading-snug pt-0.5">{choice}</span>
+              <span className="text-sm leading-snug pt-0.5">
+                <MathText text={choice} />
+              </span>
             </button>
           )
         })}

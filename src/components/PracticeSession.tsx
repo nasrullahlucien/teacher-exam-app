@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { ArrowLeft, CheckCircle2, XCircle, ArrowRight, RotateCcw, AlertTriangle, Sparkles, Check } from 'lucide-react'
 import type { Question } from '../types'
 import { recordAnswer, saveExamHistory } from '../db'
+import { MathText } from './MathText'
 
 interface PracticeSessionProps {
   title: string
@@ -163,7 +164,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-800 line-clamp-2">
-                      ข้อ {idx + 1}. {q.question}
+                      ข้อ {idx + 1}. <MathText text={q.question} />
                     </p>
                     <div className="mt-1 flex items-center gap-2 text-[11px]">
                       <span className="text-slate-500">ตอบ: {choiceLabels[selectedAnswers[idx] ?? 0]}</span>
@@ -249,7 +250,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
         </div>
 
         <p className="text-base font-semibold text-slate-800 leading-relaxed whitespace-pre-line">
-          {currentQ.question}
+          <MathText text={currentQ.question} />
         </p>
       </div>
 
@@ -293,7 +294,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
                   choiceLabels[idx]
                 )}
               </div>
-              <span className="text-sm leading-snug pt-0.5">{choice}</span>
+              <span className="text-sm leading-snug pt-0.5">
+                <MathText text={choice} />
+              </span>
             </button>
           )
         })}
@@ -330,7 +333,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({
               <span>คำอธิบายเฉลย:</span>
               <span className="text-emerald-600">ข้อ {choiceLabels[currentQ.answer]} ถูกต้อง</span>
             </div>
-            <p className="leading-relaxed text-slate-600">{currentQ.explanation}</p>
+            <p className="leading-relaxed text-slate-600">
+              <MathText text={currentQ.explanation} />
+            </p>
           </div>
 
           {/* Next Button */}
